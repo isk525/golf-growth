@@ -9,3 +9,4 @@
 - Android向けviewportと横幅指定を修正
 
 既存リポジトリ直下へZIP内のファイルを上書きし、Commitしてください。Firebase Secretsは再登録不要です。
+upd
