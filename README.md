@@ -1,39 +1,11 @@
-# Golf Growth
+# Golf Growth Smart Coach
 
-3人で共有できる、スマホ向けゴルフ成長スコアブックです。
+## 追加機能
+- クラブ、方向、高さ、打点、ミスから改善候補を3件提示
+- 選んだ改善の効果を◎○△×で保存
+- 同じクラブ・ミスにおける本人の効果実績で次回の提案順が変化
+- よく出る課題と改善ランキングを表示
+- AI API不要。提案ルールは `src/coachRules.js`
 
-## 主な機能
-- 9ホールの共有スコアカード（3〜10）
-- ティー・アプローチ・パットの4段階評価
-- コースマスタとPar構成
-- 練習カルテ、改善ノート
-- Firebase Firestoreのリアルタイム同期
-- PWAインストール
-- GitHub Pages自動公開
-
-## ローカル起動
-1. Node.js 22をインストール
-2. `.env.example` を `.env.local` にコピー
-3. Firebase設定値を入力
-4. `npm install`
-5. `npm run dev`
-
-Firebaseを未設定でも、LocalStorageの画面体験版として動作します。
-
-## Firebase設定
-1. Firebase Consoleでプロジェクトを作成
-2. Webアプリを追加
-3. Authenticationで「匿名」を有効化
-4. Firestore Databaseを作成
-5. Firebase CLIを使う場合は `firebase deploy --only firestore:rules`
-6. `.env.local` にWebアプリ設定を入力
-
-## GitHub Pages公開
-1. GitHubで空のリポジトリを作成
-2. このフォルダ内のファイルをすべてアップロード
-3. Repository Settings > Secrets and variables > Actions に `.env.example` と同名の6つの値を登録
-4. Repository Settings > Pages > Source で `GitHub Actions` を選択
-5. `main` ブランチへpushすると自動でbuild/deploy
-
-## 注意
-現在のFirestoreルールは、匿名認証済みユーザーにラウンドの読み書きを許可するMVP用です。参加コードを知るユーザーだけが操作する小規模検証を想定しています。本格公開前には、参加者IDまたは招待トークンによるアクセス制御へ強化してください。
+## GitHubへの反映
+ZIP内のファイルを既存リポジトリ直下へ上書きし、Commitします。`.github/workflows/deploy.yml` も更新対象です。既存のGitHub Secretsはそのまま利用できます。
