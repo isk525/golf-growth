@@ -1,2 +1,1 @@
-rules_version = '2';
-service cloud.firestore { match /databases/{database}/documents { match /rounds/{id} { allow read, create, update: if request.auth != null; allow delete: if false; } } }
+rules_version='2';service cloud.firestore{match /databases/{database}/documents{match /rounds/{id}{allow read,create,update:if request.auth!=null;allow delete:if false;}}}
