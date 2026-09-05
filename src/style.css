@@ -87,3 +87,23 @@
   text-align:center;
   white-space:nowrap;
 }
+
+.measureRow{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:10px;
+}
+
+.measureRow label{
+  display:flex;
+  flex-direction:column;
+  gap:4px;
+}
+
+.measureRow input{
+  width:100%;
+}
+
+.measureRow small{
+  display:none;
+}
