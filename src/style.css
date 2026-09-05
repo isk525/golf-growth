@@ -74,3 +74,16 @@
   text-align:center;
   color:#64748b;
 }
+
+.measureTabs{
+  display:grid;
+  grid-template-columns:repeat(3,1fr);
+  gap:6px;
+}
+
+.measureTabs .choice{
+  padding:10px 2px;
+  font-size:12px;
+  text-align:center;
+  white-space:nowrap;
+}
