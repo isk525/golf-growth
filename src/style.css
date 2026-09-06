@@ -112,12 +112,15 @@
 
 .dataManager{
   display:grid;
-  gap:10px;
+  gap:12px;
 }
 
 .dataManager small{
+  display:block;
+  margin-top:6px;
   color:#64748b;
   font-size:10px;
+  line-height:1.5;
 }
 
 .backupActions{
