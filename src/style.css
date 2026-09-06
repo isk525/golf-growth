@@ -107,3 +107,46 @@
 .measureRow small{
   display:none;
 }
+
+/* V5.11.4 Backup */
+
+.dataManager{
+  display:grid;
+  gap:10px;
+}
+
+.dataManager small{
+  color:#64748b;
+  font-size:10px;
+}
+
+.backupActions{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:8px;
+}
+
+.backupActions button,
+.backupActions label{
+  border:0;
+  border-radius:10px;
+  padding:10px;
+  cursor:pointer;
+  text-align:center;
+  font-weight:900;
+}
+
+.backupActions button{
+  background:#059669;
+  color:white;
+}
+
+.backupActions label{
+  background:#ecfdf5;
+  color:#047857;
+  border:1px solid #a7f3d0;
+}
+
+.restoreInput{
+  display:none;
+}

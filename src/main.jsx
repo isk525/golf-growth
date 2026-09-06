@@ -1,6 +1,6 @@
 import React,{useEffect,useMemo,useState}from'react';import{createRoot}from'react-dom/client';import{registerSW}from'virtual:pwa-register';import{Home,Flag,Dumbbell,BookOpen,BarChart3,Ruler,ChevronLeft,ChevronRight,Copy,Pencil,Trash2,Sparkles,RefreshCw}from'lucide-react';import{doc,getDoc,onSnapshot,setDoc}from'firebase/firestore';import{db,enabled,login}from'./firebase';import'./style.css';
 let updateSW=registerSW({immediate:true,onNeedRefresh(){window.dispatchEvent(new Event('gg-update'))}});
-const APP_VERSION='5.11.4';
+const APP_VERSION='5.11.5';
 const CLUBS=['ドライバー','3W','5W','UT','5I','6I','7I','8I','9I','PW','AW','SW','パター'],DIR=['左大','左','中央','右','右大'],HEIGHT=['低い','普通','高い'],MISS=[['スライス','右へ曲がる'],['フック','左へ曲がる'],['チーピン','低く急激に左'],['天ぷら','高く上がり飛ばない'],['トップ','低く転がる'],['ダフリ','手前の地面を打つ'],['引っかけ','最初から左'],['プッシュ','最初から右']],R=['◎','○','△','×'],S=[3,4,5,6,7,8,9,10],SWINGS=['フル','10時','8時'];
 const tips={
 スライス:['力を抜いて7割で振る','フィニッシュまで振り切る','左手のナックルを少し多く見せる','切り返しを一拍ゆっくりする','振り幅を肩から肩までにする','胸の回転でクラブを運ぶ','右肩を前へ出さない','フェースを合わせてから足を置く'],
@@ -58,6 +58,113 @@ Object.assign(tipHelp,{
 const course={id:'river',name:'河川敷ショート',holes:Array.from({length:9},(_,i)=>({no:i+1,par:i%2?3:4}))},base={players:['井関','',''],members:['井関'],courses:[course],distances:[],putterSettings:{putterLength:0.85,stepLength:0.7},logs:[],round:null,history:[]},fresh=()=>({club:'ドライバー',direction:'中央',height:'普通',misses:[],puttPower:'普通',puttSlope:'平坦',puttIssue:'距離感',puttMeasure:'meter',puttMeters:'3',putterCount:'',stepCount:'',puttStroke:'右足内側',puttDistanceResult:'ちょうど',puttDirection:'中央',puttErrorCm:'0',swing:'フル',selectedTip:'',result:'○'}),id=()=>Math.random().toString(36).slice(2,8).toUpperCase(),fmt=x=>new Intl.DateTimeFormat('ja-JP',{month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit'}).format(new Date(x));
 function load(){try{const x=JSON.parse(localStorage.getItem('golf-growth-state')||'{}');return{...base,...x,courses:x.courses?.length?x.courses:[course],distances:x.distances||x.clubDistances||[],logs:x.logs||[],history:x.history||x.roundHistory||[]}}catch{return base}}
 function App(){const initial=load();const[d,setD]=useState(initial),[page,setPage]=useState('home'),[hole,setHole]=useState(0),[courseId,setCourseId]=useState(initial.courses[0].id),[holes,setHoles]=useState(initial.courses[0].holes.map(h=>({...h,play:true}))),[practice,setPractice]=useState(fresh),[suggestions,setSuggestions]=useState([]),[excludedSuggestions,setExcludedSuggestions]=useState([]),[practiceView,setPracticeView]=useState('input'),[editingLogId,setEditingLogId]=useState(null),[assistOpen,setAssistOpen]=useState(false),[editCourse,setEditCourse]=useState(null),[distance,setDistance]=useState({club:'PW',swing:'フル',yards:''}),[remaining,setRemaining]=useState(''),[join,setJoin]=useState(''),[msg,setMsg]=useState(''),[update,setUpdate]=useState(false),[aboutOpen,setAboutOpen]=useState(false),[putterLength,setPutterLength]=useState(String(initial.putterSettings?.putterLength||0.85)),[stepLength,setStepLength]=useState(String(initial.putterSettings?.stepLength||0.7));useEffect(()=>localStorage.setItem('golf-growth-state',JSON.stringify(d)),[d]);useEffect(()=>{const f=()=>setUpdate(true);window.addEventListener('gg-update',f);return()=>window.removeEventListener('gg-update',f)},[]);useEffect(()=>{if(!enabled||!d.round?.id)return;let off;login().then(()=>off=onSnapshot(doc(db,'rounds',d.round.id),x=>x.exists()&&setD(v=>({...v,round:x.data()}))));return()=>off?.()},[d.round?.id]);const toast=x=>{setMsg(x);setTimeout(()=>setMsg(''),1600)},sync=async r=>{setD(x=>({...x,round:r}));if(enabled){await login();await setDoc(doc(db,'rounds',r.id),r)}};
+const createBackup=()=>{
+  try{
+    const payload={
+      format:'golf-growth-backup',
+      formatVersion:1,
+      appVersion:APP_VERSION,
+      exportedAt:new Date().toISOString(),
+      data:d
+    };
+
+    const blob=new Blob(
+      [JSON.stringify(payload,null,2)],
+      {type:'application/json'}
+    );
+
+    const url=URL.createObjectURL(blob);
+
+    const a=document.createElement('a');
+
+    a.href=url;
+
+    a.download=
+      `golf-growth-backup-${
+        new Date().toISOString().slice(0,10)
+      }.json`;
+
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+
+    setTimeout(
+      ()=>URL.revokeObjectURL(url),
+      1000
+    );
+
+    toast('バックアップを作成しました');
+
+  }catch(e){
+    console.error(e);
+    toast('バックアップ作成に失敗しました');
+  }
+};
+const restoreBackup=async event=>{
+  const file=event.target.files?.[0];
+
+  event.target.value='';
+
+  if(!file)return;
+
+  try{
+
+    const payload=
+      JSON.parse(await file.text());
+
+    if(
+      payload?.format!=='golf-growth-backup'
+    ){
+      throw new Error();
+    }
+
+    if(
+      !confirm(
+        '現在のデータをバックアップ内容で置き換えますか？'
+      )
+    ){
+      return;
+    }
+
+    localStorage.setItem(
+      'golf-growth-state',
+      JSON.stringify(payload.data)
+    );
+
+    setD(payload.data);
+
+setCourseId(
+  payload.data.courses?.[0]?.id || course.id
+);
+
+setHoles(
+  (payload.data.courses?.[0]?.holes || course.holes)
+    .map(h=>({...h,play:true}))
+);
+
+setPutterLength(
+  String(
+    payload.data.putterSettings?.putterLength || 0.85
+  )
+);
+
+setStepLength(
+  String(
+    payload.data.putterSettings?.stepLength || 0.7
+  )
+);
+    
+    toast('復元しました');
+
+  }catch(e){
+
+    console.error(e);
+
+    toast(
+      'バックアップファイルを読み込めません'
+    );
+  }
+};
 const checkForUpdate=async()=>{try{if(!('serviceWorker'in navigator))return toast('この環境では更新確認を利用できません');const registration=await navigator.serviceWorker.getRegistration();if(!registration)return toast('更新機能を準備中です');await registration.update();if(registration.waiting){updateSW(true);return}toast(`最新版を確認しました（v${APP_VERSION}）`)}catch(error){console.error(error);toast('更新確認に失敗しました')}};
 const start=()=>{if(d.round)return toast('実行中のラウンドがあります');const ps=d.players.map(x=>x.trim()).filter(Boolean),hs=holes.filter(h=>h.play),c=d.courses.find(x=>x.id===courseId);if(!ps.length||!hs.length)return toast('設定を確認してください');const r={id:id(),status:'active',createdAt:new Date().toISOString(),course:c.name,players:ps,holes:hs.map(h=>({no:h.no,par:+h.par,scores:Object.fromEntries(ps.map(p=>[p,null]))}))};setD(x=>({...x,members:[...new Set([...x.members,...ps])]}));sync(r);setPage('round')};const finish=async()=>{const r={...d.round,status:'finished',finishedAt:new Date().toISOString()};if(enabled)await setDoc(doc(db,'rounds',r.id),r);setD(x=>({...x,round:null,history:[r,...x.history.filter(v=>v.id!==r.id)]}));setPage('results')};
 const resultPoint={'◎':1,'○':.7,'△':.25,'×':0};const clubStats=(club,swing)=>{const rows=d.logs.filter(x=>x.club===club&&(x.swing||'フル')===swing);if(!rows.length)return{count:0,rate:null};return{count:rows.length,rate:Math.round(rows.reduce((sum,x)=>sum+(resultPoint[x.result]??0),0)/rows.length*100)}};const recs=useMemo(()=>{const y=+remaining;if(!y)return[];return d.distances.map(x=>{const stat=clubStats(x.club,x.swing);return{...x,...stat,diff:Math.abs(x.yards-y),recommendScore:Math.abs(x.yards-y)-(stat.rate??50)/20}}).sort((a,b)=>a.recommendScore-b.recommendScore).slice(0,3)},[remaining,d.distances,d.logs]);const suggestionContextMatch=(log,p)=>{if(log.club!==p.club)return false;if(p.club==='パター'){if(log.puttIssue!==p.puttIssue||log.puttSlope!==p.puttSlope)return false;if(p.puttIssue==='距離感')return Math.abs((+log.puttMeters||0)-estimatedPuttMeters())<=1&&log.puttDistanceResult===p.puttDistanceResult;return log.puttDirection===p.puttDirection;}return(log.swing||'フル')===(p.swing||'フル')&&log.misses?.some(m=>p.misses.includes(m))};
@@ -65,7 +172,48 @@ const estimatedPuttMeters=()=>{if(practice.puttMeasure==='putter')return Math.ro
 const puttReference=useMemo(()=>{const target=estimatedPuttMeters();if(!target)return null;const rows=d.logs.filter(x=>x.club==='パター'&&x.puttDistanceResult==='ちょうど'&&Math.abs((+x.puttMeters||0)-target)<=1).sort((a,b)=>Math.abs((+a.puttMeters||0)-target)-Math.abs((+b.puttMeters||0)-target));return rows[0]||null},[practice.puttMeasure,practice.puttMeters,practice.putterCount,practice.stepCount,d.logs,putterLength,stepLength]);
 const propose=()=>{if(practice.club!=='パター'&&practice.misses.length===0)return toast('正確な改善候補のため、ミスを1つ以上選択してください');const baseTips=practice.club==='パター'?(practice.puttIssue==='距離感'?(puttDistanceTips[practice.puttDistanceResult==='ショート'?'short':practice.puttDistanceResult==='オーバー'?'over':'good']):putterTips.方向):[...new Set(practice.misses.flatMap(m=>tips[m]||[]))];const ranked=baseTips.map((name,index)=>{const exact=d.logs.filter(log=>suggestionContextMatch(log,practice)&&log.selectedTip===name&&(practice.club==='パター'||(log.direction===practice.direction&&log.height===practice.height)));const related=d.logs.filter(log=>suggestionContextMatch(log,practice)&&log.selectedTip===name);const rows=exact.length?exact:related;const latest=rows[0]?.result;const avg=rows.length?rows.reduce((sum,row)=>sum+(resultPoint[row.result]??0),0)/rows.length:null;const hasBadExact=exact.some(row=>row.result==='×');const penalty=latest==='×'?160:latest==='△'?65:0;const untriedBonus=rows.length===0?28:0;return{name,index,trials:rows.length,rate:avg===null?null:Math.round(avg*100),latest,excluded:hasBadExact,score:100-index+(avg??0)*85+Math.min(rows.length,8)*3+untriedBonus-penalty}}).sort((a,b)=>b.score-a.score);setExcludedSuggestions(ranked.filter(x=>x.excluded));setSuggestions(ranked.filter(x=>!x.excluded).slice(0,3));setPractice({...practice,selectedTip:''});setPracticeView('suggestions')};
 return <div className="app"><header><Flag/><button className="appTitle" onClick={()=>setAboutOpen(true)}>Golf Growth</button><button className="versionButton" onClick={checkForUpdate} title="最新版を確認"><RefreshCw/><span>v{APP_VERSION}</span></button>{d.round&&<button className="code" onClick={()=>navigator.clipboard.writeText(d.round.id)}>{d.round.id}<Copy/></button>}</header><main>
-{page==='home'&&<div className="stack"><button className="distanceLink" onClick={()=>setPage('distances')}><Ruler/><span><b>クラブ距離表</b><small>フル・10時・8時の飛距離を登録</small></span><ChevronRight/></button><Card><div className="row"><h2>ラウンド設定</h2><button className="sub" onClick={()=>setPage('courses')}>コース管理</button></div><select value={courseId} onChange={e=>{const c=d.courses.find(x=>x.id===e.target.value);setCourseId(c.id);setHoles(c.holes.map(h=>({...h,play:true})))}}>{d.courses.map(c=><option key={c.id} value={c.id}>{c.name}</option>)}</select><div className="holeGrid">{holes.map((h,i)=><div className={h.play?'on':''} key={h.no}><button onClick={()=>setHoles(a=>a.map((x,j)=>j===i?{...x,play:!x.play}:x))}>H{h.no}</button><label>Par<select value={h.par} onChange={e=>setHoles(a=>a.map((x,j)=>j===i?{...x,par:+e.target.value}:x))}>{[3,4,5,6].map(n=><option key={n}>{n}</option>)}</select></label></div>)}</div></Card><Card><label>参加メンバー</label>{[0,1,2].map(i=><div className="member" key={i}><input value={d.players[i]||''} onChange={e=>setD(x=>({...x,players:x.players.map((v,j)=>j===i?e.target.value:v)}))}/><select value="" onChange={e=>e.target.value&&setD(x=>({...x,players:x.players.map((v,j)=>j===i?e.target.value:v)}))}><option value="">履歴</option>{d.members.map(n=><option key={n}>{n}</option>)}</select></div>)}<Primary f={start}>ラウンド開始</Primary></Card><Card><label>参加コードで入る</label><div className="inline"><input value={join} onChange={e=>setJoin(e.target.value.toUpperCase())}/><button className="joinButton" onClick={async()=>{const x=await getDoc(doc(db,'rounds',join));if(!x.exists())return toast('見つかりません');setD(v=>({...v,round:x.data()}));setPage('round')}}>参加</button></div></Card></div>}
+{page==='home'&&<div className="stack"><button className="distanceLink" onClick={()=>setPage('distances')}><Ruler/><span><b>クラブ距離表</b><small>フル・10時・8時の飛距離を登録</small></span><ChevronRight/></button><Card><div className="row"><h2>ラウンド設定</h2><button className="sub" onClick={()=>setPage('courses')}>コース管理</button></div><select value={courseId} onChange={e=>{const c=d.courses.find(x=>x.id===e.target.value);setCourseId(c.id);setHoles(c.holes.map(h=>({...h,play:true})))}}>{d.courses.map(c=><option key={c.id} value={c.id}>{c.name}</option>)}</select><div className="holeGrid">{holes.map((h,i)=><div className={h.play?'on':''} key={h.no}><button onClick={()=>setHoles(a=>a.map((x,j)=>j===i?{...x,play:!x.play}:x))}>H{h.no}</button><label>Par<select value={h.par} onChange={e=>setHoles(a=>a.map((x,j)=>j===i?{...x,par:+e.target.value}:x))}>{[3,4,5,6].map(n=><option key={n}>{n}</option>)}</select></label></div>)}</div></Card><Card><label>参加メンバー</label>{[0,1,2].map(i=><div className="member" key={i}><input value={d.players[i]||''} onChange={e=>setD(x=>({...x,players:x.players.map((v,j)=>j===i?e.target.value:v)}))}/><select value="" onChange={e=>e.target.value&&setD(x=>({...x,players:x.players.map((v,j)=>j===i?e.target.value:v)}))}><option value="">履歴</option>{d.members.map(n=><option key={n}>{n}</option>)}</select></div>)}<Primary f={start}>ラウンド開始</Primary></Card><Card><label>参加コードで入る</label><div className="inline"><input value={join} onChange={e=>setJoin(e.target.value.toUpperCase())}/><button className="joinButton" onClick={async()=>{const x=await getDoc(doc(db,'rounds',join));if(!x.exists())return toast('見つかりません');setD(v=>({...v,round:x.data()}));setPage('round')}}>参加</button></div></Card>
+<Card>
+
+<div className="dataManager">
+
+  <div>
+
+    <b>データ管理</b>
+
+    <small>
+      練習・改善・距離表・
+      ラウンド履歴を保存
+    </small>
+
+  </div>
+
+  <div className="backupActions">
+
+    <button
+      onClick={createBackup}
+    >
+      バックアップ作成
+    </button>
+
+    <label htmlFor="restore-backup">
+      バックアップから復元
+    </label>
+
+    <input
+      id="restore-backup"
+      className="restoreInput"
+      type="file"
+      accept=".json"
+      onChange={restoreBackup}
+    />
+
+  </div>
+
+</div>
+
+</Card>
+</div>}
 {page==='courses'&&<div className="stack"><Back f={()=>setPage('home')}/><h2>コースマスタ</h2>{d.courses.map(c=><Card key={c.id}><div className="row"><span><b>{c.name}</b><small>Par {c.holes.reduce((a,h)=>a+h.par,0)}</small></span><span><button className="icon" onClick={()=>setEditCourse(structuredClone(c))}><Pencil/></button><button className="icon danger" onClick={()=>d.courses.length>1&&confirm('削除しますか？')&&setD(x=>({...x,courses:x.courses.filter(v=>v.id!==c.id)}))}><Trash2/></button></span></div></Card>)}<Primary f={()=>setEditCourse({id:id(),name:'',holes:Array.from({length:9},(_,i)=>({no:i+1,par:4}))})}>新規コース</Primary>{editCourse&&<div className="modal"><Card><h3>コース編集</h3><input value={editCourse.name} onChange={e=>setEditCourse({...editCourse,name:e.target.value})}/><div className="holeGrid">{editCourse.holes.map((h,i)=><div className="on" key={h.no}><button>H{h.no}</button><label>Par<select value={h.par} onChange={e=>setEditCourse({...editCourse,holes:editCourse.holes.map((x,j)=>j===i?{...x,par:+e.target.value}:x)})}>{[3,4,5,6].map(n=><option key={n}>{n}</option>)}</select></label></div>)}</div><Primary f={()=>{setD(x=>({...x,courses:[...x.courses.filter(c=>c.id!==editCourse.id),editCourse]}));setCourseId(editCourse.id);setHoles(editCourse.holes.map(h=>({...h,play:true})));setEditCourse(null)}}>保存</Primary><button className="sub" onClick={()=>setEditCourse(null)}>キャンセル</button></Card></div>}</div>}
 {page==='practice'&&<div className="stack"><h2>練習カルテ</h2>{practiceView==='input'&&<Card><Field n="クラブ"><div className="choices">{CLUBS.map(c=><Choice key={c} on={practice.club===c} f={()=>{setPractice({...fresh(),club:c});setSuggestions([]);setExcludedSuggestions([])}}>{c}</Choice>)}</div></Field>{practice.club==='パター'?<><section className="puttMeasureCard"><div className="row"><b>目標までの距離</b><button className="miniSave" onClick={()=>{setD(x=>({...x,putterSettings:{putterLength:+putterLength||0.85,stepLength:+stepLength||0.7}}));toast('測定基準を保存しました')}}>基準保存</button></div><div className="measureTabs">{[['meter','ｍ'],['putter','本数'],['step','歩数']].map(([k,l])=><Choice key={k} on={practice.puttMeasure===k} f={()=>setPractice({...practice,puttMeasure:k})}>{l}</Choice>)}</div>{practice.puttMeasure==='meter'&&<label className="measureInput"><input inputMode="decimal" value={practice.puttMeters} onChange={e=>setPractice({...practice,puttMeters:e.target.value})}/><b>m</b></label>}{practice.puttMeasure==='putter'&&<><div className="measureRow"><label>何本分<input inputMode="decimal" value={practice.putterCount} onChange={e=>setPractice({...practice,putterCount:e.target.value})}/></label><label>1本<input inputMode="decimal" value={putterLength} onChange={e=>setPutterLength(e.target.value)}/><small>m</small></label></div><strong className="estimatedDistance">推定 {estimatedPuttMeters()}m</strong></>}{practice.puttMeasure==='step'&&<><div className="measureRow"><label>歩数<input inputMode="decimal" value={practice.stepCount} onChange={e=>setPractice({...practice,stepCount:e.target.value})}/></label><label>1歩<input inputMode="decimal" value={stepLength} onChange={e=>setStepLength(e.target.value)}/><small>m</small></label></div><strong className="estimatedDistance">推定 {estimatedPuttMeters()}m</strong></>}</section><Field n="振り幅の基準"><div className="strokeChoices">{['右足内側','右足外側','足幅と同じ','足幅の1.5倍','自由'].map(v=><Choice key={v} on={practice.puttStroke===v} f={()=>setPractice({...practice,puttStroke:v})}>{v}</Choice>)}</div>{puttReference&&<small className="puttReference">近い距離の成功例：{puttReference.puttMeters}m → {puttReference.puttStroke}</small>}</Field><Field n="傾斜"><div className="choices">{['上り','平坦','下り','スライスライン','フックライン'].map(v=><Choice key={v} on={practice.puttSlope===v} f={()=>setPractice({...practice,puttSlope:v})}>{v}</Choice>)}</div></Field><Field n="課題"><div className="choices">{['距離感','方向'].map(v=><Choice key={v} on={practice.puttIssue===v} f={()=>setPractice({...practice,puttIssue:v})}>{v}</Choice>)}</div></Field>{practice.puttIssue==='距離感'?<><Field n="転がった結果"><div className="choices">{['ショート','ちょうど','オーバー'].map(v=><Choice key={v} on={practice.puttDistanceResult===v} f={()=>setPractice({...practice,puttDistanceResult:v})}>{v}</Choice>)}</div></Field><Field n="誤差の目安"><label className="measureInput compact"><input inputMode="numeric" value={practice.puttErrorCm} onChange={e=>setPractice({...practice,puttErrorCm:e.target.value})}/><b>cm</b></label></Field></>:<Field n="打ち出し方向"><div className="choices">{['左','中央','右'].map(v=><Choice key={v} on={practice.puttDirection===v} f={()=>setPractice({...practice,puttDirection:v})}>{v}</Choice>)}</div></Field>}</>:<><Field n="最終的に飛んだ方向"><small className="fieldHelp">ボールが最終的にどちらへ行ったか</small><div className="choices">{DIR.map(v=><Choice key={v} on={practice.direction===v} f={()=>setPractice({...practice,direction:v})}>{v}</Choice>)}</div></Field><Field n="高さ"><div className="choices">{HEIGHT.map(v=><Choice key={v} on={practice.height===v} f={()=>setPractice({...practice,height:v})}>{v}</Choice>)}</div></Field><Field n="振り幅"><div className="choices">{SWINGS.map(v=><Choice key={v} on={practice.swing===v} f={()=>setPractice({...practice,swing:v})}>{v}</Choice>)}</div></Field><Field n="どのようなミスだったか"><small className="fieldHelp required">方向とは別に、曲がり方や当たり方を1つ以上選択</small><div className="misses">{MISS.map(([n,desc])=><Choice key={n} on={practice.misses.includes(n)} f={()=>setPractice({...practice,misses:practice.misses.includes(n)?practice.misses.filter(x=>x!==n):[...practice.misses,n]})}><b>{n}</b><small>{desc}</small></Choice>)}</div></Field></>}<Primary f={propose}><Sparkles/>改善候補を見る</Primary></Card>}{practiceView==='suggestions'&&<><Back f={()=>setPracticeView('input')}/><Card><small>入力した症状</small><b>{practice.club==='パター'?`${estimatedPuttMeters()}m・${practice.puttStroke}・${practice.puttSlope}・${practice.puttIssue==='距離感'?practice.puttDistanceResult:practice.puttDirection}`:`${practice.club}・${practice.swing}・${practice.direction}・${practice.height}・${practice.misses.join(' / ')}`}</b></Card><h3>試す改善を選択</h3>{suggestions.map((x,i)=><button className="tipCard" key={x.name} onClick={()=>{setPractice({...practice,selectedTip:x.name});setPracticeView('result')}}><div>{i===0&&<span className="recommendBadge"><Sparkles/>特におすすめ</span>}<b>{i+1}. {x.name}</b><p>{tipHelp[x.name]||'この項目を1つだけ試し、打球の変化を確認します。'}</p><small className="tipEvidence">{x.trials===0?'未試行':`過去効果 ${x.rate}%・${x.trials}回${x.latest?`・直近 ${x.latest}`:''}`}</small></div><ChevronRight/></button>)}{excludedSuggestions.length>0&&<details className="excludedTips"><summary>今回は除外した改善 {excludedSuggestions.length}件</summary>{excludedSuggestions.map(x=><button key={x.name} onClick={()=>{setPractice({...practice,selectedTip:x.name});setPracticeView('result')}}><span><b>{x.name}</b><small>同じ条件で過去に悪化（×）</small></span><em>もう一度試す</em></button>)}</details>}</>}{practiceView==='result'&&<><Back f={()=>setPracticeView('suggestions')}/><Card><small>今回試す改善</small><h3>{practice.selectedTip}</h3><p className="tipExplanation">{tipHelp[practice.selectedTip]}</p><Field n="試した結果"><div className="effectChoices">{R.map((v,i)=><Choice key={v} on={practice.result===v} f={()=>setPractice({...practice,result:v})}><b>{v}</b><small>{['かなり効いた','少し効いた','変化なし','悪化'][i]}</small></Choice>)}</div></Field><Primary f={()=>{setD(x=>({...x,logs:editingLogId?x.logs.map(log=>log.id===editingLogId?{...practice,puttMeters:practice.club==='パター'?estimatedPuttMeters():practice.puttMeters,id:editingLogId,date:log.date,updatedAt:new Date().toISOString()}:log):[{...practice,puttMeters:practice.club==='パター'?estimatedPuttMeters():practice.puttMeters,id:id(),date:new Date().toISOString()},...x.logs]}));setEditingLogId(null);setPractice(fresh());setSuggestions([]);setExcludedSuggestions([]);setPracticeView('input');toast(editingLogId?'改善記録を更新しました':'改善記録を保存しました')}}>改善記録を保存</Primary></Card></>}</div>}
 {page==='notes'&&<div className="stack"><h2>改善ノート</h2>{d.logs.length===0?<Card><small>まだ記録がありません</small></Card>:d.logs.map((x,i)=><Card key={x.id||i}><div className="row"><b>{x.club} {x.club!=='パター'&&<small>・{x.swing||'フル'}</small>}</b><strong>{x.result}</strong></div><small>{fmt(x.date)}</small><div className="resultTip">{x.selectedTip}</div><span>{x.club==='パター'?`${x.puttMeters||'?'}m・${x.puttStroke||'振り幅未記録'}・${x.puttSlope}・${x.puttIssue==='距離感'?(x.puttDistanceResult||'結果未記録'):(x.puttDirection||'方向未記録')}`:`${x.direction}・${x.height}・${x.misses.join(' / ')}`}</span><div className="recordActions"><button onClick={()=>{const logId=x.id||`legacy-${i}`;if(!x.id)setD(v=>({...v,logs:v.logs.map((r,j)=>j===i?{...r,id:logId}:r)}));setEditingLogId(logId);setPractice({...fresh(),...x,id:undefined});setSuggestions([]);setExcludedSuggestions([]);setPracticeView('input');setPage('practice')}}><Pencil/>編集</button><button className="danger" onClick={()=>confirm('この改善記録を削除しますか？')&&setD(v=>({...v,logs:v.logs.filter((_,j)=>j!==i)}))}><Trash2/>削除</button></div></Card>)}</div>}
