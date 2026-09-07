@@ -377,3 +377,55 @@
   }
 
 }
+
+/* V5.13.0 クラブ別分析 */
+
+.noteClubTabs{
+  display:flex;
+  gap:6px;
+  overflow-x:auto;
+  padding:2px 0 7px;
+  scrollbar-width:none;
+}
+
+.noteClubTabs::-webkit-scrollbar{
+  display:none;
+}
+
+.noteClubTabs button{
+  flex:0 0 auto;
+  border:1px solid #dfe7e2;
+  border-radius:999px;
+  padding:8px 12px;
+  background:white;
+  color:#64748b;
+  font-size:11px;
+  font-weight:900;
+}
+
+.noteClubTabs button.on{
+  border-color:#059669;
+  background:#059669;
+  color:white;
+}
+
+
+/* 分析全体 */
+
+.clubAnalysis{
+  display:grid;
+  gap:11px;
+}
+
+.clubAnalysis h3{
+  margin:0;
+  font-size:14px;
+}
+
+.analysisTitle{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+}
+
+.analysisTitle>
