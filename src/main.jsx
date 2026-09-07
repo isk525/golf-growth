@@ -1,6 +1,6 @@
-import React,{useEffect,useMemo,useState}from'react';import{createRoot}from'react-dom/client';import{registerSW}from'virtual:pwa-register';import{Home,Flag,Dumbbell,BookOpen,BarChart3,Ruler,ChevronLeft,ChevronRight,Copy,Pencil,Trash2,Sparkles,RefreshCw}from'lucide-react';import{doc,getDoc,onSnapshot,setDoc}from'firebase/firestore';import{db,enabled,login}from'./firebase';import'./style.css';
+import React,{useEffect,useMemo,useState}from'react';import{createRoot}from'react-dom/client';import{registerSW}from'virtual:pwa-register';import{Home,Flag,Dumbbell,BookOpen,BarChart3,Ruler,ChevronLeft,ChevronRight,Copy,Pencil,Trash2,Sparkles,RefreshCw,Download}from'lucide-react';import{doc,getDoc,onSnapshot,setDoc}from'firebase/firestore';import{db,enabled,login}from'./firebase';import'./style.css';
 let updateSW=registerSW({immediate:true,onNeedRefresh(){window.dispatchEvent(new Event('gg-update'))}});
-const APP_VERSION='5.14.0';
+const APP_VERSION='5.14.1';
 const SUCCESS_FACTORS=['左足を動かさない','グリップをニュートラルにする','フェースを置いてから構える','シャフトを寝かさない','胸の回転で振る','前傾を保つ','頭の高さを保つ','力を抜く','切り返しをゆっくりする','フィニッシュまで振り切る','テンポを一定にする','ボールを最後まで見る'];
 const CLUBS=['ドライバー','3W','5W','UT','5I','6I','7I','8I','9I','PW','AW','SW','パター'],DIR=['左大','左','中央','右','右大'],HEIGHT=['低い','普通','高い'],MISS=[['スライス','右へ曲がる'],['フック','左へ曲がる'],['チーピン','低く急激に左'],['天ぷら','高く上がり飛ばない'],['トップ','低く転がる'],['ダフリ','手前の地面を打つ'],['引っかけ','最初から左'],['プッシュ','最初から右']],R=['◎','○','△','×'],S=[3,4,5,6,7,8,9,10],SWINGS=['フル','10時','8時'];
 const tips={
@@ -65,49 +65,162 @@ const[d,setD]=useState(initial),
 [hole,setHole]=useState(0),
 [courseId,setCourseId]=useState(initial.courses[0].id),
 [holes,setHoles]=useState(initial.courses[0].holes.map(h=>({...h,play:true}))),
-[practice,setPractice]=useState(fresh),[suggestions,setSuggestions]=useState([]),[excludedSuggestions,setExcludedSuggestions]=useState([]),[showAllSuggestions,setShowAllSuggestions]=useState(false),[practiceView,setPracticeView]=useState('input'),[editingLogId,setEditingLogId]=useState(null),[assistOpen,setAssistOpen]=useState(false),[editCourse,setEditCourse]=useState(null),[distance,setDistance]=useState({club:'PW',swing:'フル',yards:''}),[remaining,setRemaining]=useState(''),[join,setJoin]=useState(''),[msg,setMsg]=useState(''),[update,setUpdate]=useState(false),[aboutOpen,setAboutOpen]=useState(false),[putterLength,setPutterLength]=useState(String(initial.putterSettings?.putterLength||0.85)),[stepLength,setStepLength]=useState(String(initial.putterSettings?.stepLength||0.7));useEffect(()=>localStorage.setItem('golf-growth-state',JSON.stringify(d)),[d]);useEffect(()=>{const f=()=>setUpdate(true);window.addEventListener('gg-update',f);return()=>window.removeEventListener('gg-update',f)},[]);useEffect(()=>{if(!enabled||!d.round?.id)return;let off;login().then(()=>off=onSnapshot(doc(db,'rounds',d.round.id),x=>x.exists()&&setD(v=>({...v,round:x.data()}))));return()=>off?.()},[d.round?.id]);const toast=x=>{setMsg(x);setTimeout(()=>setMsg(''),1600)},sync=async r=>{setD(x=>({...x,round:r}));if(enabled){await login();await setDoc(doc(db,'rounds',r.id),r)}};
+[practice,setPractice]=useState(fresh),[suggestions,setSuggestions]=useState([]),[excludedSuggestions,setExcludedSuggestions]=useState([]),[showAllSuggestions,setShowAllSuggestions]=useState(false),[practiceView,setPracticeView]=useState('input'),[editingLogId,setEditingLogId]=useState(null),[assistOpen,setAssistOpen]=useState(false),[editCourse,setEditCourse]=useState(null),[distance,setDistance]=useState({club:'PW',swing:'フル',yards:''}),[remaining,setRemaining]=useState(''),[join,setJoin]=useState(''),[msg,setMsg]=useState(''),
+[update,setUpdate]=useState(false),
+
+[installPrompt,setInstallPrompt]=useState(null),
+
+[isInstalled,setIsInstalled]=useState(
+  window.matchMedia(
+    '(display-mode: standalone)'
+  ).matches ||
+  window.navigator.standalone===true
+),
+
+[aboutOpen,setAboutOpen]=useState(false),
+[putterLength,setPutterLength]=useState(String(initial.putterSettings?.putterLength||0.85)),[stepLength,setStepLength]=useState(String(initial.putterSettings?.stepLength||0.7));useEffect(()=>localStorage.setItem('golf-growth-state',JSON.stringify(d)),[d]);
+
+useEffect(()=>{
+const f=()=>setUpdate(true);
+window.addEventListener('gg-update',f);
+return()=>window.removeEventListener('gg-update',f)},[]);
+useEffect(()=>{
+
+  const handleBeforeInstall=event=>{
+    event.preventDefault();
+
+    setInstallPrompt(event);
+  };
+
+  const handleInstalled=()=>{
+    setIsInstalled(true);
+    setInstallPrompt(null);
+
+    toast(
+      'アプリをインストールしました'
+    );
+  };
+
+  const displayMode=
+    window.matchMedia(
+      '(display-mode: standalone)'
+    );
+
+  const handleDisplayMode=event=>{
+    if(event.matches){
+      setIsInstalled(true);
+      setInstallPrompt(null);
+    }
+  };
+
+  window.addEventListener(
+    'beforeinstallprompt',
+    handleBeforeInstall
+  );
+
+  window.addEventListener(
+    'appinstalled',
+    handleInstalled
+  );
+
+  displayMode.addEventListener?.(
+    'change',
+    handleDisplayMode
+  );
+
+  return()=>{
+
+    window.removeEventListener(
+      'beforeinstallprompt',
+      handleBeforeInstall
+    );
+
+    window.removeEventListener(
+      'appinstalled',
+      handleInstalled
+    );
+
+    displayMode.removeEventListener?.(
+      'change',
+      handleDisplayMode
+    );
+  };
+
+},[]);
+useEffect(()=>{if(!enabled||!d.round?.id)return;let off;login().then(()=>off=onSnapshot(doc(db,'rounds',d.round.id),x=>x.exists()&&setD(v=>({...v,round:x.data()}))));return()=>off?.()},[d.round?.id]);const toast=x=>{setMsg(x);setTimeout(()=>setMsg(''),1600)},sync=async r=>{setD(x=>({...x,round:r}));if(enabled){await login();await setDoc(doc(db,'rounds',r.id),r)}};
+
+const downloadBackup=()=>{
+
+  const payload={
+    format:'golf-growth-backup',
+    formatVersion:1,
+    appVersion:APP_VERSION,
+    exportedAt:
+      new Date().toISOString(),
+    data:d
+  };
+
+  const blob=new Blob(
+    [
+      JSON.stringify(
+        payload,
+        null,
+        2
+      )
+    ],
+    {
+      type:'application/json'
+    }
+  );
+
+  const url=
+    URL.createObjectURL(blob);
+
+  const anchor=
+    document.createElement('a');
+
+  const date=
+    new Date()
+      .toISOString()
+      .slice(0,10);
+
+  anchor.href=url;
+
+  anchor.download=
+    `golf-growth-backup-${date}.json`;
+
+  document.body.appendChild(anchor);
+
+  anchor.click();
+  anchor.remove();
+
+  setTimeout(
+    ()=>URL.revokeObjectURL(url),
+    1000
+  );
+};
+
+
 const createBackup=()=>{
+
   try{
-    const payload={
-      format:'golf-growth-backup',
-      formatVersion:1,
-      appVersion:APP_VERSION,
-      exportedAt:new Date().toISOString(),
-      data:d
-    };
 
-    const blob=new Blob(
-      [JSON.stringify(payload,null,2)],
-      {type:'application/json'}
+    downloadBackup();
+
+    toast(
+      'バックアップを作成しました'
     );
 
-    const url=URL.createObjectURL(blob);
+  }catch(error){
 
-    const a=document.createElement('a');
+    console.error(error);
 
-    a.href=url;
-
-    a.download=
-      `golf-growth-backup-${
-        new Date().toISOString().slice(0,10)
-      }.json`;
-
-    document.body.appendChild(a);
-    a.click();
-    a.remove();
-
-    setTimeout(
-      ()=>URL.revokeObjectURL(url),
-      1000
+    toast(
+      'バックアップ作成に失敗しました'
     );
-
-    toast('バックアップを作成しました');
-
-  }catch(e){
-    console.error(e);
-    toast('バックアップ作成に失敗しました');
   }
 };
+
 const restoreBackup=async event=>{
   const file=event.target.files?.[0];
 
@@ -173,6 +286,74 @@ setStepLength(
     );
   }
 };
+
+const installApp=async()=>{
+
+  if(isInstalled){
+    return;
+  }
+
+  try{
+
+    /*
+     * インストール前に、
+     * 現在の端末データを保存
+     */
+    downloadBackup();
+
+    if(!installPrompt){
+
+      const isIOS=
+        /iphone|ipad|ipod/i.test(
+          navigator.userAgent
+        );
+
+      if(isIOS){
+
+        return toast(
+          'バックアップを保存しました。Safariの共有から「ホーム画面に追加」を選択してください'
+        );
+      }
+
+      return toast(
+        'バックアップを保存しました。インストールの準備後にもう一度押してください'
+      );
+    }
+
+    toast(
+      'バックアップを保存しました'
+    );
+
+    await installPrompt.prompt();
+
+    const choice=
+      await installPrompt.userChoice;
+
+    setInstallPrompt(null);
+
+    if(choice.outcome==='accepted'){
+
+      toast(
+        'インストールを開始しました'
+      );
+
+    }else{
+
+      toast(
+        'インストールはキャンセルされました。バックアップは保存されています'
+      );
+    }
+
+  }catch(error){
+
+    console.error(error);
+
+    toast(
+      'バックアップまたはインストール処理に失敗しました'
+    );
+  }
+};
+
 const checkForUpdate=async()=>{try{if(!('serviceWorker'in navigator))return toast('この環境では更新確認を利用できません');const registration=await navigator.serviceWorker.getRegistration();if(!registration)return toast('更新機能を準備中です');await registration.update();if(registration.waiting){updateSW(true);return}toast(`最新版を確認しました（v${APP_VERSION}）`)}catch(error){console.error(error);toast('更新確認に失敗しました')}};
 const start=()=>{if(d.round)return toast('実行中のラウンドがあります');const ps=d.players.map(x=>x.trim()).filter(Boolean),hs=holes.filter(h=>h.play),c=d.courses.find(x=>x.id===courseId);if(!ps.length||!hs.length)return toast('設定を確認してください');const r={id:id(),status:'active',createdAt:new Date().toISOString(),course:c.name,players:ps,holes:hs.map(h=>({no:h.no,par:+h.par,scores:Object.fromEntries(ps.map(p=>[p,null]))}))};setD(x=>({...x,members:[...new Set([...x.members,...ps])]}));sync(r);setPage('round')};const finish=async()=>{const r={...d.round,status:'finished',finishedAt:new Date().toISOString()};if(enabled)await setDoc(doc(db,'rounds',r.id),r);setD(x=>({...x,round:null,history:[r,...x.history.filter(v=>v.id!==r.id)]}));setPage('results')};
 const resultPoint={'◎':1,'○':.7,'△':.25,'×':0};const SHOT_RESULTS=[['◎','狙い通り'],['○','ほぼ良い'],['△','ばらつき'],['×','ミス']];const shotPoint={'◎':1,'○':0.75,'△':0.35,'×':0};
@@ -794,7 +975,31 @@ setShowAllSuggestions(false);
 
 setPractice({...practice,selectedTip:''});
 setPracticeView('suggestions')};
-return <div className="app"><header><Flag/><button className="appTitle" onClick={()=>setAboutOpen(true)}>Golf Growth</button><button className="versionButton" onClick={checkForUpdate} title="最新版を確認"><RefreshCw/><span>v{APP_VERSION}</span></button>{d.round&&<button className="code" onClick={()=>navigator.clipboard.writeText(d.round.id)}>{d.round.id}<Copy/></button>}</header><main>
+return <div className="app"><header><Flag/><button className="appTitle" onClick={()=>setAboutOpen(true)}>Golf Growth</button><button className="versionButton" onClick={checkForUpdate} title="最新版を確認"><RefreshCw/><span>v{APP_VERSION}</span></button>
+<button
+  className={`installButton ${
+    isInstalled
+      ?'installed'
+      :''
+  }`}
+  onClick={installApp}
+  disabled={isInstalled}
+  title={
+    isInstalled
+      ?'インストール済みです'
+      :'データをバックアップしてアプリをインストール'
+  }
+>
+  <Download/>
+
+  <span>
+    {isInstalled
+      ?'導入済'
+      :'アプリDL'
+    }
+  </span>
+</button>
+{d.round&&<button className="code" onClick={()=>navigator.clipboard.writeText(d.round.id)}>{d.round.id}<Copy/></button>}</header><main>
 {page==='home'&&<div className="stack"><button className="distanceLink" onClick={()=>setPage('distances')}><Ruler/><span><b>クラブ距離表</b><small>フル・10時・8時の飛距離を登録</small></span><ChevronRight/></button><Card><div className="row"><h2>ラウンド設定</h2><button className="sub" onClick={()=>setPage('courses')}>コース管理</button></div><select value={courseId} onChange={e=>{const c=d.courses.find(x=>x.id===e.target.value);setCourseId(c.id);setHoles(c.holes.map(h=>({...h,play:true})))}}>{d.courses.map(c=><option key={c.id} value={c.id}>{c.name}</option>)}</select><div className="holeGrid">{holes.map((h,i)=><div className={h.play?'on':''} key={h.no}><button onClick={()=>setHoles(a=>a.map((x,j)=>j===i?{...x,play:!x.play}:x))}>H{h.no}</button><label>Par<select value={h.par} onChange={e=>setHoles(a=>a.map((x,j)=>j===i?{...x,par:+e.target.value}:x))}>{[3,4,5,6].map(n=><option key={n}>{n}</option>)}</select></label></div>)}</div></Card><Card><label>参加メンバー</label>{[0,1,2].map(i=><div className="member" key={i}><input value={d.players[i]||''} onChange={e=>setD(x=>({...x,players:x.players.map((v,j)=>j===i?e.target.value:v)}))}/><select value="" onChange={e=>e.target.value&&setD(x=>({...x,players:x.players.map((v,j)=>j===i?e.target.value:v)}))}><option value="">履歴</option>{d.members.map(n=><option key={n}>{n}</option>)}</select></div>)}<Primary f={start}>ラウンド開始</Primary></Card><Card><label>参加コードで入る</label><div className="inline"><input value={join} onChange={e=>setJoin(e.target.value.toUpperCase())}/><button className="joinButton" onClick={async()=>{const x=await getDoc(doc(db,'rounds',join));if(!x.exists())return toast('見つかりません');setD(v=>({...v,round:x.data()}));setPage('round')}}>参加</button></div></Card>
 <Card>
 

@@ -711,3 +711,112 @@
 
 /* V5.14.0 勝ちパターン */
 .successFactorChoices{display:grid;grid-template-columns:1fr 1fr;gap:6px}.successFactorChoices .choice{text-align:left;line-height:1.35;padding:10px 8px}.winningPatternMini{display:grid;gap:5px;padding:9px;border-radius:10px;background:#fff7ed;border:1px solid #fed7aa}.winningPatternMini>small{color:#9a3412;font-size:9px;font-weight:900}.winningPatternMini>span{display:grid;grid-template-columns:minmax(0,1fr) auto;align-items:center;gap:7px}.winningPatternMini b{color:#7c2d12;font-size:11px}.winningPatternMini em{color:#9a3412;font-size:9px;font-style:normal;font-weight:900}.analysisLead{margin:0;color:#64748b;font-size:9px;line-height:1.5}.winningPatterns{display:grid;gap:7px}.winningPatterns>div{display:grid;grid-template-columns:24px minmax(0,1fr) auto;align-items:center;gap:7px;padding:9px;border-radius:10px;background:#fff7ed}.winningPatterns>div>span{width:24px;height:24px;display:grid;place-items:center;border-radius:50%;background:#f59e0b;color:white;font-size:10px;font-weight:900}.winningPatterns>div>b{color:#7c2d12;font-size:11px}.winningPatterns>div>small{color:#9a3412;font-size:9px;font-weight:900}.recordWinningPatterns{display:flex;flex-wrap:wrap;gap:5px}.recordWinningPatterns span{padding:4px 7px;border-radius:999px;background:#fff7ed;color:#9a3412;font-size:8px;font-weight:900}@media(max-width:360px){.successFactorChoices{grid-template-columns:1fr}}
+
+
+/* V5.14.1 PWAインストール */
+
+.installButton{
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  gap:4px;
+
+  flex:0 0 auto;
+  min-width:70px;
+
+  border:1px solid #a7f3d0;
+  border-radius:10px;
+
+  padding:7px 8px;
+
+  background:#059669;
+  color:#fff;
+
+  font-size:10px;
+  font-weight:900;
+
+  white-space:nowrap;
+}
+
+.installButton svg{
+  width:14px;
+  height:14px;
+}
+
+.installButton:active:not(:disabled){
+  transform:translateY(1px);
+  opacity:.85;
+}
+
+.installButton.installed,
+.installButton:disabled{
+  border-color:#dfe7e2;
+  background:#eef3f0;
+  color:#94a3b8;
+  box-shadow:none;
+  cursor:not-allowed;
+  opacity:.85;
+}
+
+
+/* ヘッダーが狭いスマホ */
+
+@media(max-width:390px){
+
+  header{
+    gap:5px;
+    padding-left:9px;
+    padding-right:9px;
+  }
+
+  .appTitle{
+    min-width:0;
+    overflow:hidden;
+    text-overflow:ellipsis;
+    white-space:nowrap;
+    font-size:16px;
+  }
+
+  .versionButton{
+    padding:7px 6px;
+  }
+
+  .versionButton span{
+    font-size:9px;
+  }
+
+  .installButton{
+    min-width:62px;
+    padding:7px 6px;
+    font-size:9px;
+  }
+}
+
+
+/* さらに狭いスマホ */
+
+@media(max-width:350px){
+
+  .versionButton span{
+    display:none;
+  }
+
+  .versionButton{
+    width:32px;
+    height:32px;
+    padding:0;
+    justify-content:center;
+  }
+
+  .installButton{
+    min-width:56px;
+  }
+}
+
+aside{
+  width:min(400px,calc(100% - 24px));
+  white-space:normal;
+  text-align:center;
+  line-height:1.45;
+  font-size:11px;
+}
