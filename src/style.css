@@ -428,4 +428,283 @@
   justify-content:space-between;
 }
 
-.analysisTitle>
+.analysisTitle>span{
+  display:grid;
+  gap:2px;
+}
+
+.analysisTitle>span>b{
+  font-size:20px;
+}
+
+.analysisTitle small{
+  color:#64748b;
+  font-size:9px;
+}
+
+.analysisTitle>strong{
+  color:#047857;
+}
+
+
+/* ショット精度 */
+
+.accuracyPanel{
+  display:grid;
+  grid-template-columns:1fr auto;
+  align-items:end;
+  gap:6px;
+}
+
+.accuracyPanel>span{
+  color:#64748b;
+  font-size:10px;
+  font-weight:800;
+}
+
+.accuracyPanel>strong{
+  color:#047857;
+  font-size:28px;
+  line-height:1;
+}
+
+.accuracyPanel .barTrack{
+  grid-column:1 / 3;
+}
+
+.barTrack{
+  height:8px;
+  overflow:hidden;
+  border-radius:999px;
+  background:#e5eee9;
+}
+
+.barTrack>span{
+  display:block;
+  height:100%;
+  max-width:100%;
+  border-radius:inherit;
+  background:
+    linear-gradient(
+      90deg,
+      #10b981,
+      #059669
+    );
+}
+
+.barTrack.miss>span{
+  background:
+    linear-gradient(
+      90deg,
+      #fb923c,
+      #ef4444
+    );
+}
+
+
+/* ◎○△×集計 */
+
+.outcomeSummary{
+  display:grid;
+  grid-template-columns:repeat(4,1fr);
+  gap:5px;
+}
+
+.outcomeSummary span{
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  gap:5px;
+  padding:7px 3px;
+  border-radius:9px;
+  background:#f1f5f3;
+  color:#64748b;
+  font-size:10px;
+}
+
+.outcomeSummary b{
+  color:#17211b;
+  font-size:13px;
+}
+
+
+/* 分析行 */
+
+.analysisRows{
+  display:grid;
+  gap:9px;
+}
+
+.analysisRow{
+  display:grid;
+  grid-template-columns:
+    72px
+    minmax(0,1fr)
+    42px;
+  align-items:center;
+  gap:7px;
+}
+
+.analysisRow>span{
+  display:grid;
+  min-width:0;
+  font-size:11px;
+  font-weight:800;
+}
+
+.analysisRow>span small{
+  color:#94a3b8;
+  font-size:8px;
+  font-weight:600;
+}
+
+.analysisRow>b{
+  text-align:right;
+  color:#047857;
+  font-size:10px;
+}
+
+
+/* 有効な改善 */
+
+.effectiveTips{
+  display:grid;
+  gap:7px;
+}
+
+.effectiveTips>div{
+  display:grid;
+  gap:3px;
+  padding:10px;
+  border-radius:10px;
+  background:#f0fdf4;
+}
+
+.effectiveTips>div>b{
+  color:#047857;
+  font-size:12px;
+}
+
+.effectiveTips>div>small{
+  color:#64748b;
+  font-size:9px;
+}
+
+.bestMark{
+  width:max-content;
+  display:flex;
+  align-items:center;
+  gap:4px;
+  padding:3px 7px;
+  border-radius:999px;
+  background:#fef3c7;
+  color:#92400e;
+  font-size:9px;
+  font-weight:900;
+}
+
+.bestMark svg{
+  width:11px;
+  height:11px;
+}
+
+
+/* パター成功例 */
+
+.puttReferenceList{
+  display:grid;
+  grid-template-columns:
+    repeat(2,minmax(0,1fr));
+  gap:6px;
+}
+
+.puttReferenceList>div{
+  display:grid;
+  gap:2px;
+  padding:9px;
+  border-radius:10px;
+  background:#f0fdf4;
+}
+
+.puttReferenceList strong{
+  color:#047857;
+}
+
+.puttReferenceList span{
+  font-size:11px;
+  font-weight:800;
+}
+
+.puttReferenceList small{
+  color:#64748b;
+  font-size:8px;
+}
+
+
+/* 履歴 */
+
+.noteHistory{
+  border:1px solid #dfe7e2;
+  border-radius:15px;
+  background:white;
+}
+
+.noteHistory>summary{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  padding:13px;
+  cursor:pointer;
+  color:#047857;
+  font-size:12px;
+  font-weight:900;
+  list-style:none;
+}
+
+.noteHistory>summary::-webkit-details-marker{
+  display:none;
+}
+
+.noteHistory>summary small{
+  color:#64748b;
+}
+
+.noteHistoryList{
+  display:grid;
+  gap:9px;
+  padding:0 10px 10px;
+}
+
+.shotRecordLabel{
+  width:max-content;
+  padding:4px 7px;
+  border-radius:999px;
+  background:#eff6ff;
+  color:#2563eb;
+  font-size:9px;
+  font-weight:900;
+}
+
+.emptyAnalysis{
+  margin:0;
+  color:#64748b;
+  font-size:11px;
+}
+
+
+/* 小さいスマホ */
+
+@media(max-width:360px){
+
+  .analysisRow{
+    grid-template-columns:
+      64px
+      minmax(0,1fr)
+      38px;
+  }
+
+  .puttReferenceList{
+    grid-template-columns:1fr;
+  }
+
+}

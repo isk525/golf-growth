@@ -1,6 +1,6 @@
 import React,{useEffect,useMemo,useState}from'react';import{createRoot}from'react-dom/client';import{registerSW}from'virtual:pwa-register';import{Home,Flag,Dumbbell,BookOpen,BarChart3,Ruler,ChevronLeft,ChevronRight,Copy,Pencil,Trash2,Sparkles,RefreshCw}from'lucide-react';import{doc,getDoc,onSnapshot,setDoc}from'firebase/firestore';import{db,enabled,login}from'./firebase';import'./style.css';
 let updateSW=registerSW({immediate:true,onNeedRefresh(){window.dispatchEvent(new Event('gg-update'))}});
-const APP_VERSION='5.13.0';
+const APP_VERSION='5.13.1';
 const CLUBS=['ドライバー','3W','5W','UT','5I','6I','7I','8I','9I','PW','AW','SW','パター'],DIR=['左大','左','中央','右','右大'],HEIGHT=['低い','普通','高い'],MISS=[['スライス','右へ曲がる'],['フック','左へ曲がる'],['チーピン','低く急激に左'],['天ぷら','高く上がり飛ばない'],['トップ','低く転がる'],['ダフリ','手前の地面を打つ'],['引っかけ','最初から左'],['プッシュ','最初から右']],R=['◎','○','△','×'],S=[3,4,5,6,7,8,9,10],SWINGS=['フル','10時','8時'];
 const tips={
 スライス:['力を抜いて7割で振る','フィニッシュまで振り切る','左手のナックルを少し多く見せる','切り返しを一拍ゆっくりする','振り幅を肩から肩までにする','胸の回転でクラブを運ぶ','右肩を前へ出さない','フェースを合わせてから足を置く'],
