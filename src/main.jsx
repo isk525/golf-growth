@@ -1,6 +1,7 @@
 import React,{useEffect,useMemo,useState}from'react';import{createRoot}from'react-dom/client';import{registerSW}from'virtual:pwa-register';import{Home,Flag,Dumbbell,BookOpen,BarChart3,Ruler,ChevronLeft,ChevronRight,Copy,Pencil,Trash2,Sparkles,RefreshCw}from'lucide-react';import{doc,getDoc,onSnapshot,setDoc}from'firebase/firestore';import{db,enabled,login}from'./firebase';import'./style.css';
 let updateSW=registerSW({immediate:true,onNeedRefresh(){window.dispatchEvent(new Event('gg-update'))}});
-const APP_VERSION='5.13.1';
+const APP_VERSION='5.14.0';
+const SUCCESS_FACTORS=['左足を動かさない','グリップをニュートラルにする','フェースを置いてから構える','シャフトを寝かさない','胸の回転で振る','前傾を保つ','頭の高さを保つ','力を抜く','切り返しをゆっくりする','フィニッシュまで振り切る','テンポを一定にする','ボールを最後まで見る'];
 const CLUBS=['ドライバー','3W','5W','UT','5I','6I','7I','8I','9I','PW','AW','SW','パター'],DIR=['左大','左','中央','右','右大'],HEIGHT=['低い','普通','高い'],MISS=[['スライス','右へ曲がる'],['フック','左へ曲がる'],['チーピン','低く急激に左'],['天ぷら','高く上がり飛ばない'],['トップ','低く転がる'],['ダフリ','手前の地面を打つ'],['引っかけ','最初から左'],['プッシュ','最初から右']],R=['◎','○','△','×'],S=[3,4,5,6,7,8,9,10],SWINGS=['フル','10時','8時'];
 const tips={
 スライス:['力を抜いて7割で振る','フィニッシュまで振り切る','左手のナックルを少し多く見せる','切り返しを一拍ゆっくりする','振り幅を肩から肩までにする','胸の回転でクラブを運ぶ','右肩を前へ出さない','フェースを合わせてから足を置く'],
@@ -55,7 +56,7 @@ Object.assign(tipHelp,{
 'インパクトで緩めず振り幅を小さくする':'打つ瞬間に減速せず、一定テンポのままバックスイングを小さくします。',
 'フォローを短くそろえる':'打った後のヘッドを必要以上に長く出さず、左右の振り幅をそろえます。',
 '下りでは基準より1段階小さくする':'平坦時の基準振り幅より1段階小さくし、傾斜による転がりを利用します。'});
-const course={id:'river',name:'河川敷ショート',holes:Array.from({length:9},(_,i)=>({no:i+1,par:i%2?3:4}))},base={players:['井関','',''],members:['井関'],courses:[course],distances:[],putterSettings:{putterLength:0.85,stepLength:0.7},logs:[],round:null,history:[]},fresh=()=>({club:'ドライバー',direction:'中央',height:'普通',misses:[],puttPower:'普通',puttSlope:'平坦',puttIssue:'距離感',puttMeasure:'meter',puttMeters:'3',putterCount:'',stepCount:'',puttStroke:'右足内側',puttDistanceResult:'ちょうど',puttDirection:'中央',puttErrorCm:'0',swing:'フル',shotOutcome:'◎',selectedTip:'',selectedTips:[],tipResults:{},result:'○'}),id=()=>Math.random().toString(36).slice(2,8).toUpperCase(),fmt=x=>new Intl.DateTimeFormat('ja-JP',{month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit'}).format(new Date(x));
+const course={id:'river',name:'河川敷ショート',holes:Array.from({length:9},(_,i)=>({no:i+1,par:i%2?3:4}))},base={players:['井関','',''],members:['井関'],courses:[course],distances:[],putterSettings:{putterLength:0.85,stepLength:0.7},logs:[],round:null,history:[]},fresh=()=>({club:'ドライバー',direction:'中央',height:'普通',misses:[],puttPower:'普通',puttSlope:'平坦',puttIssue:'距離感',puttMeasure:'meter',puttMeters:'3',putterCount:'',stepCount:'',puttStroke:'右足内側',puttDistanceResult:'ちょうど',puttDirection:'中央',puttErrorCm:'0',swing:'フル',shotOutcome:'◎',successFactors:[],selectedTip:'',selectedTips:[],tipResults:{},result:'○'}),id=()=>Math.random().toString(36).slice(2,8).toUpperCase(),fmt=x=>new Intl.DateTimeFormat('ja-JP',{month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit'}).format(new Date(x));
 function load(){try{const x=JSON.parse(localStorage.getItem('golf-growth-state')||'{}');return{...base,...x,courses:x.courses?.length?x.courses:[course],distances:x.distances||x.clubDistances||[],logs:x.logs||[],history:x.history||x.roundHistory||[]}}catch{return base}}
 function App(){const initial=load();
 const[d,setD]=useState(initial),
@@ -275,11 +276,24 @@ const getClubInsight=club=>{
       b.count-a.count
     )[0]||null;
 
+  const successFactorCounts={};
+  shotLogs
+    .filter(log=>log.shotOutcome==='◎'||log.shotOutcome==='○')
+    .forEach(log=>{
+      (log.successFactors||[]).forEach(name=>{
+        successFactorCounts[name]=(successFactorCounts[name]||0)+1;
+      });
+    });
+  const winningPatterns=Object.entries(successFactorCounts)
+    .map(([name,count])=>({name,count}))
+    .sort((a,b)=>b.count-a.count)
+    .slice(0,3);
   return{
     count:shotLogs.length,
     successRate,
     topMisses,
-    bestTip
+    bestTip,
+    winningPatterns
   };
 };
 
@@ -520,6 +534,18 @@ const getClubAnalysis=club=>{
         .slice(0,6)
       :[];
 
+  const successFactorCounts={};
+  shotLogs
+    .filter(log=>log.shotOutcome==='◎'||log.shotOutcome==='○')
+    .forEach(log=>{
+      (log.successFactors||[]).forEach(name=>{
+        successFactorCounts[name]=(successFactorCounts[name]||0)+1;
+      });
+    });
+  const winningPatterns=Object.entries(successFactorCounts)
+    .map(([name,count])=>({name,count}))
+    .sort((a,b)=>b.count-a.count)
+    .slice(0,5);
   return{
     club,
     totalShots,
@@ -530,6 +556,7 @@ const getClubAnalysis=club=>{
     misses,
     maxMissCount,
     effectiveTips,
+    winningPatterns,
     puttDistanceStats,
     puttReferences
   };
@@ -855,6 +882,17 @@ return <div className="app"><header><Flag/><button className="appTitle" onClick=
           </p>
         )}
 
+        {activeClubInsight.winningPatterns.length>0&&(
+          <div className="winningPatternMini">
+            <small>勝ちパターン</small>
+            {activeClubInsight.winningPatterns.map(item=>(
+              <span key={item.name}>
+                <b>✓ {item.name}</b>
+                <em>{item.count}回</em>
+              </span>
+            ))}
+          </div>
+        )}
         {activeClubInsight.bestTip&&(
           <div className="themeFocus">
             <small>ここを意識</small>
@@ -897,7 +935,11 @@ return <div className="app"><header><Flag/><button className="appTitle" onClick=
           misses:
             value==='◎'||value==='○'
               ?[]
-              :practice.misses
+              :practice.misses,
+          successFactors:
+            value==='◎'||value==='○'
+              ?practice.successFactors
+              :[]
         })}
       >
         <b>{value}</b>
@@ -906,6 +948,35 @@ return <div className="app"><header><Flag/><button className="appTitle" onClick=
     ))}
   </div>
 </Field>
+{(
+  practice.shotOutcome==='◎'||
+  practice.shotOutcome==='○'
+)&&(
+  <Field n="今回良かった要因（任意）">
+    <small className="fieldHelp">
+      分かるものだけ選択してください。選ばなくても保存できます
+    </small>
+    <div className="successFactorChoices">
+      {SUCCESS_FACTORS.map(name=>{
+        const on=practice.successFactors.includes(name);
+        return(
+          <Choice
+            key={name}
+            on={on}
+            f={()=>setPractice({
+              ...practice,
+              successFactors:on
+                ?practice.successFactors.filter(x=>x!==name)
+                :[...practice.successFactors,name]
+            })}
+          >
+            {name}
+          </Choice>
+        );
+      })}
+    </div>
+  </Field>
+)}
 {(
   practice.shotOutcome==='△' ||
   practice.shotOutcome==='×'
@@ -1300,6 +1371,13 @@ return <div className="app"><header><Flag/><button className="appTitle" onClick=
                 {x.recordType==='shot'&&(
                   <div className="shotRecordLabel">
                     ショット結果
+                  </div>
+                )}
+                {x.recordType==='shot'&&(x.successFactors||[]).length>0&&(
+                  <div className="recordWinningPatterns">
+                    {(x.successFactors||[]).map(name=>(
+                      <span key={name}>✓ {name}</span>
+                    ))}
                   </div>
                 )}
 
@@ -1708,6 +1786,21 @@ const ClubAnalysis=({analysis})=>(
       </Card>
     )}
 
+    {analysis.winningPatterns.length>0&&(
+      <Card>
+        <h3>勝ちパターン</h3>
+        <p className="analysisLead">ナイスショット時に共通していたポイント</p>
+        <div className="winningPatterns">
+          {analysis.winningPatterns.map((item,index)=>(
+            <div key={item.name}>
+              <span>{index+1}</span>
+              <b>{item.name}</b>
+              <small>{item.count}回</small>
+            </div>
+          ))}
+        </div>
+      </Card>
+    )}
     {analysis.effectiveTips.length>0&&(
       <Card>
         <h3>意識するポイント</h3>
