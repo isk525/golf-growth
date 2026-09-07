@@ -315,21 +315,22 @@ const getClubAnalysis=club=>{
     )
     :null;
 
-  const outc*meCounts={
+  const outcomeCounts={
     '◎':0,
     '○':0,
- *  '△':0,
+   '△':0,
     '×':0
   };
 
-  shotLog*.forEach(log=>{
-    const outcome=*      log.shotOutcome||'△';
+  shotLogs.forEach(log=>{
+    const outcome=
+      log.shotOutcome||'△';
 
-    o*tcomeCounts[outcome]=
-      (outco*eCounts[outcome]||0)+1;
+    outcomeCounts[outcome]=
+      (outcomeCounts[outcome]||0)+1;
   });
 
-  c*nst swingStats=
+  const swingStats=
     club==='パター'
       ?[]
       :SWINGS.map(swing=>{
@@ -387,48 +388,48 @@ const getClubAnalysis=club=>{
             count/totalShots*100
           )
           :0
-     *}))
+     }))
       .sort(
-        (a,b)=>b.*ount-a.count
+        (a,b)=>b.count-a.count
       );
 
-  const mis*Counts={};
+  const missCounts={};
 
-  shotLogs.forEach(log*>{
-    (log.misses||[]).forEach(mi*s=>{
+  shotLogs.forEach(log=>{
+    (log.misses||[]).forEach(miss=>{
       missCounts[miss]=
-     *  (missCounts[miss]||0)+1;
-    });*  });
+    (missCounts[miss]||0)+1;
+    });});
 
   const misses=
-    Object.*ntries(missCounts)
+    Object.entries(missCounts)
       .map(([name,count])=>({
         name,
-      * count
+      count
       }))
       .sort(
-    *   (a,b)=>b.count-a.count
-      );*
+      (a,b)=>b.count-a.count
+      );
   const maxMissCount=
     misses[0]?.count||1;
 
-  const tipGroups={}*
+  const tipGroups={};
 
   tipLogs.forEach(log=>{
-    if(*log.selectedTip)return;
+    if(!log.selectedTip)return;
 
-    if(!t*pGroups[log.selectedTip]){
-      t*pGroups[log.selectedTip]={
-       *total:0,
+    if(!tipGroups[log.selectedTip]){
+      tipGroups[log.selectedTip]={
+       total:0,
         count:0,
-        *atest:null
+        latest:null
       };
     }
 
-    tip*roups[log.selectedTip].total+=
-   *  resultPoint[log.result]??0;
+    tipGroups[log.selectedTip].total+=
+     resultPoint[log.result]??0;
 
-   *tipGroups[log.selectedTip].count+=1;
+   tipGroups[log.selectedTip].count+=1;
 
     if(
       !tipGroups[log.selectedTip].latest
