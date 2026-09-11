@@ -903,3 +903,156 @@ aside{
     60px;
   align-items:center;
 }
+
+/* クラブ表示設定 */
+
+.clubDisplayHeader{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:8px;
+}
+
+.clubDisplayHeader small{
+  color:#64748b;
+  font-size:9px;
+  line-height:1.4;
+}
+
+.clubDisplayHeader button{
+  flex:0 0 auto;
+  border:1px solid #a7f3d0;
+  border-radius:9px;
+  padding:7px 10px;
+  background:#ecfdf5;
+  color:#047857;
+  font-size:10px;
+  font-weight:900;
+}
+
+
+/* 設定モーダル */
+
+.clubSettingsCard{
+  display:grid;
+  gap:14px;
+}
+
+.clubSettingsHeader{
+  display:flex;
+  align-items:flex-start;
+  justify-content:space-between;
+  gap:10px;
+}
+
+.clubSettingsHeader>div{
+  display:grid;
+  gap:3px;
+}
+
+.clubSettingsHeader h3{
+  margin:0;
+}
+
+.clubSettingsHeader small{
+  color:#64748b;
+  font-size:9px;
+  line-height:1.5;
+}
+
+
+/* クラブ一覧 */
+
+.clubSettingsGrid{
+  display:grid;
+  grid-template-columns:
+    repeat(3,minmax(0,1fr));
+  gap:6px;
+}
+
+.clubSettingsGrid button{
+  min-width:0;
+  display:grid;
+  grid-template-columns:18px minmax(0,1fr);
+  align-items:center;
+  gap:4px;
+
+  border:1px solid #dfe7e2;
+  border-radius:10px;
+  padding:10px 5px;
+
+  background:#f8faf9;
+  color:#64748b;
+
+  text-align:left;
+  font-size:10px;
+}
+
+.clubSettingsGrid button span{
+  width:18px;
+  height:18px;
+
+  display:grid;
+  place-items:center;
+
+  border:1px solid #b8c6bd;
+  border-radius:5px;
+
+  color:#fff;
+  font-size:11px;
+  font-weight:900;
+}
+
+.clubSettingsGrid button b{
+  min-width:0;
+  overflow:hidden;
+  text-overflow:ellipsis;
+  white-space:nowrap;
+}
+
+.clubSettingsGrid button.on{
+  border-color:#059669;
+  background:#ecfdf5;
+  color:#047857;
+}
+
+.clubSettingsGrid button.on span{
+  border-color:#059669;
+  background:#059669;
+}
+
+
+/* 一括操作 */
+
+.clubSettingsActions{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:7px;
+}
+
+.clubSettingsActions button{
+  border:0;
+  border-radius:10px;
+  padding:11px 7px;
+  background:#059669;
+  color:#fff;
+  font-size:10px;
+  font-weight:900;
+}
+
+.clubSettingsActions button.sub{
+  background:#ecfdf5;
+  color:#047857;
+}
+
+
+/* 小さいスマホ */
+
+@media(max-width:360px){
+
+  .clubSettingsGrid{
+    grid-template-columns:
+      repeat(2,minmax(0,1fr));
+  }
+
+}
