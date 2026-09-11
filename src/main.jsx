@@ -1840,7 +1840,7 @@ return <div className="app"><header><Flag/><button className="appTitle" onClick=
 
 </Card>
 
-{groupedDistances.map(<Card>
+<Card>
 
   <div className="distanceTable">
 
@@ -1919,8 +1919,6 @@ return <div className="app"><header><Flag/><button className="appTitle" onClick=
   </div>
 
 </Card>
-
-)}
 
 </div>}
 
