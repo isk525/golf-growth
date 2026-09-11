@@ -867,22 +867,8 @@ aside{
   display:grid;
 }
 
-.distanceTableHeader,
-.distanceTableRow{
-  display:grid;
-  grid-template-columns:
-    minmax(70px,1.5fr)
-    1fr
-    1fr
-    1fr;
-  align-items:center;
-}
-
-.distanceTableRow span{
-  text-align:right;
-
 .distanceTableRow strong{
-  white-space:nowrap;
+  text-align:left;
 }
 
 .distanceTableHeader{
@@ -902,7 +888,18 @@ aside{
   color:#047857;
 }
 
+.distanceTableHeader span,
 .distanceTableRow span{
   text-align:center;
-  font-weight:700;
+}
+
+.distanceTableHeader,
+.distanceTableRow{
+  display:grid;
+  grid-template-columns:
+    120px
+    60px
+    60px
+    60px;
+  align-items:center;
 }
