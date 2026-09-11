@@ -871,12 +871,15 @@ aside{
 .distanceTableRow{
   display:grid;
   grid-template-columns:
-    80px
-    55px
-    55px
-    55px;
+    minmax(70px,1.5fr)
+    1fr
+    1fr
+    1fr;
   align-items:center;
 }
+
+.distanceTableRow span{
+  text-align:right;
 
 .distanceTableRow strong{
   white-space:nowrap;
