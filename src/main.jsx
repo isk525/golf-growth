@@ -776,6 +776,30 @@ const filteredNoteLogs=useMemo(
 
 const activeClubInsight=useMemo(()=>getClubInsight(practice.club),[practice.club,d.logs]);
 
+const clubDistances=useMemo(()=>{
+
+  const full=d.distances.find(
+    x=>
+      x.club===practice.club &&
+      x.swing==='フル'
+  );
+
+  const eight=d.distances.find(
+    x=>
+      x.club===practice.club &&
+      x.swing==='8時'
+  );
+
+  return{
+    full,
+    eight
+  };
+
+},[
+  practice.club,
+  d.distances
+]);
+               
 const getBestFocusForClub=(club,swing)=>{
   const rows=d.logs.filter(
     log=>
@@ -1048,13 +1072,48 @@ return <div className="app"><header><Flag/><button className="appTitle" onClick=
 {practice.club!=='パター'&&(
   <section className="todayTheme">
     <div className="todayThemeHeader">
-      <span>
-        <Sparkles/>
-        今日のテーマ
-      </span>
 
-      <b>{practice.club}</b>
-    </div>
+  <span>
+    <Sparkles/>
+    今日のテーマ
+  </span>
+
+  <div className="todayThemeClub">
+
+    <b>{practice.club}</b>
+
+    {
+      (
+        clubDistances.full ||
+        clubDistances.eight
+      ) &&
+      (
+        <small>
+
+          {
+            clubDistances.full &&
+            `F:${clubDistances.full.yards}y`
+          }
+
+          {
+            clubDistances.full &&
+            clubDistances.eight &&
+            ' / '
+          }
+
+          {
+            clubDistances.eight &&
+            `8:${clubDistances.eight.yards}y`
+          }
+
+        </small>
+      )
+    }
+
+  </div>
+
+</div>
+
 
     {activeClubInsight.count===0?(
       <p>
