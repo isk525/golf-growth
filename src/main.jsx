@@ -839,6 +839,27 @@ const getBestFocusForClub=(club,swing)=>{
     )[0]||null;
 };
 
+const groupedDistances=useMemo(()=>{
+
+  const grouped={};
+
+  d.distances.forEach(row=>{
+
+    if(!grouped[row.club]){
+
+      grouped[row.club]=[];
+    }
+
+    grouped[row.club].push(row);
+
+  });
+
+  return Object.entries(grouped);
+
+},[
+  d.distances
+]);
+               
 const recs=useMemo(()=>{
   const target=+remaining;
 
@@ -1743,7 +1764,173 @@ return <div className="app"><header><Flag/><button className="appTitle" onClick=
   </div>
 )}
 
-{page==='distances'&&<div className="stack"><Back f={()=>setPage('home')}/><h2>クラブ距離表</h2><Card><div className="distanceForm"><select value={distance.club} onChange={e=>setDistance({...distance,club:e.target.value})}>{CLUBS.filter(x=>x!=='パター').map(x=><option key={x}>{x}</option>)}</select><select value={distance.swing} onChange={e=>setDistance({...distance,swing:e.target.value})}>{SWINGS.map(x=><option key={x}>{x}</option>)}</select><label><input inputMode="numeric" value={distance.yards} placeholder="70" onChange={e=>setDistance({...distance,yards:e.target.value})}/><b>y</b></label></div><Primary f={()=>{if(!distance.yards)return;const r={...distance,yards:+distance.yards};setD(x=>({...x,distances:[...x.distances.filter(v=>!(v.club===r.club&&v.swing===r.swing)),r]}));setDistance({...distance,yards:''})}}>登録</Primary></Card><Card>{d.distances.map(x=><div className="distanceRow" key={x.club+x.swing}><b>{x.club}</b><span>{x.swing}</span><strong>{x.yards}y</strong><button onClick={()=>setD(v=>({...v,distances:v.distances.filter(r=>r!==x)}))}><Trash2/></button></div>)}</Card></div>}
+{page==='distances'&&<div className="stack">
+
+<Back f={()=>setPage('home')}/>
+
+<h2>クラブ距離表</h2>
+
+<Card>
+
+  <div className="distanceForm">
+
+    <select
+      value={distance.club}
+      onChange={e=>
+        setDistance({
+          ...distance,
+          club:e.target.value
+        })
+      }
+    >
+      {CLUBS
+        .filter(x=>x!=='パター')
+        .map(x=>
+          <option key={x}>
+            {x}
+          </option>
+        )
+      }
+    </select>
+
+    <select
+      value={distance.swing}
+      onChange={e=>
+        setDistance({
+          ...distance,
+          swing:e.target.value
+        })
+      }
+    >
+      {SWINGS.map(x=>
+        <option key={x}>
+          {x}
+        </option>
+      )}
+    </select>
+
+    <label>
+
+      <input
+        inputMode="numeric"
+        value={distance.yards}
+        placeholder="70"
+        onChange={e=>
+          setDistance({
+            ...distance,
+            yards:e.target.value
+          })
+        }
+      />
+
+      <b>y</b>
+
+    </label>
+
+  </div>
+
+  <Primary f={()=>{
+    if(!distance.yards)return;
+
+    const r={
+      ...distance,
+      yards:+distance.yards
+    };
+
+    setD(x=>({
+      ...x,
+      distances:[
+        ...x.distances.filter(
+          v=>!(
+            v.club===r.club &&
+            v.swing===r.swing
+          )
+        ),
+        r
+      ]
+    }));
+
+    setDistance({
+      ...distance,
+      yards:''
+    });
+
+  }}>
+    登録
+  </Primary>
+
+</Card>
+
+{groupedDistances.map(
+  ([club,rows])=>
+
+  <Card key={club}>
+
+    <h3>{club}</h3>
+
+    <div className="distanceGroup">
+
+      {rows
+        .sort((a,b)=>{
+
+          const order={
+            'フル':0,
+            '10時':1,
+            '8時':2
+          };
+
+          return (
+            order[a.swing]??99
+          )-
+          (
+            order[b.swing]??99
+          );
+
+        })
+        .map(row=>
+
+          <div
+            className="distanceGroupRow"
+            key={
+              row.club+
+              row.swing
+            }
+          >
+
+            <strong>
+              {row.swing}
+            </strong>
+
+            <span>
+              {row.yards}y
+            </span>
+
+            <button
+              onClick={()=>
+                setD(v=>({
+                  ...v,
+                  distances:
+                    v.distances.filter(
+                      r=>r!==row
+                    )
+                }))
+              }
+            >
+              <Trash2/>
+            </button>
+
+          </div>
+
+        )}
+
+    </div>
+
+  </Card>
+
+)}
+
+</div>}
+
 {page==='round'&&d.round&&<div className="stack"><Card><div className="row"><span><small>{fmt(d.round.createdAt)}</small><b>{d.round.course}</b></span><button className="code" onClick={()=>navigator.clipboard.writeText(d.round.id)}>{d.round.id}<Copy/></button></div></Card>
 <section className="clubAssist">
 <div className="assistInput"><label>残り</label><input inputMode="numeric" value={remaining} placeholder="70" onChange={e=>{setRemaining(e.target.value);setAssistOpen(false)}}/><b>y</b>
