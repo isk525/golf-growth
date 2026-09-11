@@ -862,3 +862,41 @@ aside{
 .distanceGroupRow span{
   font-weight:700;
 }
+
+.distanceTable{
+  display:grid;
+}
+
+.distanceTableHeader,
+.distanceTableRow{
+  display:grid;
+  grid-template-columns:
+    70px
+    1fr
+    1fr
+    1fr;
+  align-items:center;
+  gap:8px;
+}
+
+.distanceTableHeader{
+  padding-bottom:10px;
+  border-bottom:2px solid #dfe7e2;
+  font-size:10px;
+  font-weight:900;
+  color:#64748b;
+}
+
+.distanceTableRow{
+  padding:10px 0;
+  border-bottom:1px solid #eef2f7;
+}
+
+.distanceTableRow strong{
+  color:#047857;
+}
+
+.distanceTableRow span{
+  text-align:center;
+  font-weight:700;
+}
