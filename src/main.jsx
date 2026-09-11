@@ -1,6 +1,6 @@
 import React,{useEffect,useMemo,useState}from'react';import{createRoot}from'react-dom/client';import{registerSW}from'virtual:pwa-register';import{Home,Flag,Dumbbell,BookOpen,BarChart3,Ruler,ChevronLeft,ChevronRight,Copy,Pencil,Trash2,Sparkles,RefreshCw,Download}from'lucide-react';import{doc,getDoc,onSnapshot,setDoc}from'firebase/firestore';import{db,enabled,login}from'./firebase';import'./style.css';
 let updateSW=registerSW({immediate:true,onNeedRefresh(){window.dispatchEvent(new Event('gg-update'))}});
-const APP_VERSION='5.14.1';
+const APP_VERSION='5.15';
 const SUCCESS_FACTORS=['左足を動かさない','グリップをニュートラルにする','フェースを置いてから構える','シャフトを寝かさない','胸の回転で振る','前傾を保つ','頭の高さを保つ','力を抜く','切り返しをゆっくりする','フィニッシュまで振り切る','テンポを一定にする','ボールを最後まで見る'];
 const CLUBS=['ドライバー','3W','5W','UT','5I','6I','7I','8I','9I','PW','AW','SW','パター'],DIR=['左大','左','中央','右','右大'],HEIGHT=['低い','普通','高い'],MISS=[['スライス','右へ曲がる'],['フック','左へ曲がる'],['チーピン','低く急激に左'],['天ぷら','高く上がり飛ばない'],['トップ','低く転がる'],['ダフリ','手前の地面を打つ'],['引っかけ','最初から左'],['プッシュ','最初から右']],R=['◎','○','△','×'],S=[3,4,5,6,7,8,9,10],SWINGS=['フル','10時','8時'];
 const tips={
@@ -56,8 +56,8 @@ Object.assign(tipHelp,{
 'インパクトで緩めず振り幅を小さくする':'打つ瞬間に減速せず、一定テンポのままバックスイングを小さくします。',
 'フォローを短くそろえる':'打った後のヘッドを必要以上に長く出さず、左右の振り幅をそろえます。',
 '下りでは基準より1段階小さくする':'平坦時の基準振り幅より1段階小さくし、傾斜による転がりを利用します。'});
-const course={id:'river',name:'河川敷ショート',holes:Array.from({length:9},(_,i)=>({no:i+1,par:i%2?3:4}))},base={players:['井関','',''],members:['井関'],courses:[course],distances:[],putterSettings:{putterLength:0.85,stepLength:0.7},logs:[],round:null,history:[]},fresh=()=>({club:'ドライバー',direction:'中央',height:'普通',misses:[],puttPower:'普通',puttSlope:'平坦',puttIssue:'距離感',puttMeasure:'meter',puttMeters:'3',putterCount:'',stepCount:'',puttStroke:'右足内側',puttDistanceResult:'ちょうど',puttDirection:'中央',puttErrorCm:'0',swing:'フル',shotOutcome:'◎',successFactors:[],selectedTip:'',selectedTips:[],tipResults:{},result:'○'}),id=()=>Math.random().toString(36).slice(2,8).toUpperCase(),fmt=x=>new Intl.DateTimeFormat('ja-JP',{month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit'}).format(new Date(x));
-function load(){try{const x=JSON.parse(localStorage.getItem('golf-growth-state')||'{}');return{...base,...x,courses:x.courses?.length?x.courses:[course],distances:x.distances||x.clubDistances||[],logs:x.logs||[],history:x.history||x.roundHistory||[]}}catch{return base}}
+const course={id:'river',name:'河川敷ショート',holes:Array.from({length:9},(_,i)=>({no:i+1,par:i%2?3:4}))},base={players:['井関','',''],members:['井関'],courses:[course],distances:[],visibleClubs:[...CLUBS],putterSettings:{putterLength:0.85,stepLength:0.7},logs:[],round:null,history:[]},fresh=()=>({club:'ドライバー',direction:'中央',height:'普通',misses:[],puttPower:'普通',puttSlope:'平坦',puttIssue:'距離感',puttMeasure:'meter',puttMeters:'3',putterCount:'',stepCount:'',puttStroke:'右足内側',puttDistanceResult:'ちょうど',puttDirection:'中央',puttErrorCm:'0',swing:'フル',shotOutcome:'◎',successFactors:[],selectedTip:'',selectedTips:[],tipResults:{},result:'○'}),id=()=>Math.random().toString(36).slice(2,8).toUpperCase(),fmt=x=>new Intl.DateTimeFormat('ja-JP',{month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit'}).format(new Date(x));
+function load(){try{const x=JSON.parse(localStorage.getItem('golf-growth-state')||'{}');return{...base,...x,courses:x.courses?.length?x.courses:[course],distances:x.distances||x.clubDistances||[],visibleClubs:Array.isArray(x.visibleClubs)?x.visibleClubs:[...CLUBS],logs:x.logs||[],history:x.history||x.roundHistory||[]}}catch{return base}}
 function App(){const initial=load();
 const[d,setD]=useState(initial),
 [page,setPage]=useState('home'),
@@ -78,6 +78,7 @@ const[d,setD]=useState(initial),
 ),
 
 [aboutOpen,setAboutOpen]=useState(false),
+[clubSettingsOpen,setClubSettingsOpen]=useState(false),
 [putterLength,setPutterLength]=useState(String(initial.putterSettings?.putterLength||0.85)),[stepLength,setStepLength]=useState(String(initial.putterSettings?.stepLength||0.7));useEffect(()=>localStorage.setItem('golf-growth-state',JSON.stringify(d)),[d]);
 
 useEffect(()=>{
@@ -773,6 +774,62 @@ const filteredNoteLogs=useMemo(
       ),
   [noteClub,d.logs]
 );
+               
+const visibleClubs=Array.isArray(d.visibleClubs)?d.visibleClubs:CLUBS;
+const toggleClubVisibility=club=>{
+
+  const isVisible=
+    visibleClubs.includes(club);
+
+  if(
+    isVisible &&
+    visibleClubs.length===1
+  ){
+    return toast(
+      '最低1つのクラブを表示してください'
+    );
+  }
+
+  const nextVisibleClubs=
+    isVisible
+      ?visibleClubs.filter(
+        item=>item!==club
+      )
+      :CLUBS.filter(
+        item=>
+          visibleClubs.includes(item) ||
+          item===club
+      );
+
+  setD(value=>({
+    ...value,
+    visibleClubs:nextVisibleClubs
+  }));
+
+  /*
+   * 現在選択中のクラブをOFFにした場合、
+   * 次の表示クラブへ切り替える
+   */
+  if(
+    isVisible &&
+    practice.club===club
+  ){
+    const nextClub=
+      nextVisibleClubs[0];
+
+    if(nextClub){
+      setPractice({
+        ...fresh(),
+        club:nextClub
+      });
+
+      setSuggestions([]);
+      setExcludedSuggestions([]);
+      setShowAllSuggestions(false);
+      setPracticeView('input');
+    }
+  }
+};
 
 const activeClubInsight=useMemo(()=>getClubInsight(practice.club),[practice.club,d.logs]);
 
@@ -1067,7 +1124,60 @@ return <div className="app"><header><Flag/><button className="appTitle" onClick=
 </Card>
 </div>}
 {page==='courses'&&<div className="stack"><Back f={()=>setPage('home')}/><h2>コースマスタ</h2>{d.courses.map(c=><Card key={c.id}><div className="row"><span><b>{c.name}</b><small>Par {c.holes.reduce((a,h)=>a+h.par,0)}</small></span><span><button className="icon" onClick={()=>setEditCourse(structuredClone(c))}><Pencil/></button><button className="icon danger" onClick={()=>d.courses.length>1&&confirm('削除しますか？')&&setD(x=>({...x,courses:x.courses.filter(v=>v.id!==c.id)}))}><Trash2/></button></span></div></Card>)}<Primary f={()=>setEditCourse({id:id(),name:'',holes:Array.from({length:9},(_,i)=>({no:i+1,par:4}))})}>新規コース</Primary>{editCourse&&<div className="modal"><Card><h3>コース編集</h3><input value={editCourse.name} onChange={e=>setEditCourse({...editCourse,name:e.target.value})}/><div className="holeGrid">{editCourse.holes.map((h,i)=><div className="on" key={h.no}><button>H{h.no}</button><label>Par<select value={h.par} onChange={e=>setEditCourse({...editCourse,holes:editCourse.holes.map((x,j)=>j===i?{...x,par:+e.target.value}:x)})}>{[3,4,5,6].map(n=><option key={n}>{n}</option>)}</select></label></div>)}</div><Primary f={()=>{setD(x=>({...x,courses:[...x.courses.filter(c=>c.id!==editCourse.id),editCourse]}));setCourseId(editCourse.id);setHoles(editCourse.holes.map(h=>({...h,play:true})));setEditCourse(null)}}>保存</Primary><button className="sub" onClick={()=>setEditCourse(null)}>キャンセル</button></Card></div>}</div>}
-{page==='practice'&&<div className="stack"><h2>練習カルテ</h2>{practiceView==='input'&&<Card><Field n="クラブ"><div className="choices">{CLUBS.map(c=><Choice key={c} on={practice.club===c} f={()=>{setPractice({...fresh(),club:c});setSuggestions([]);setExcludedSuggestions([])}}>{c}</Choice>)}</div></Field>
+{page==='practice'&&<div className="stack"><h2>練習カルテ</h2>{practiceView==='input'&&<Card>
+<Field n="クラブ">
+
+  <div className="clubDisplayHeader">
+
+    <small>
+      使用するクラブだけ表示できます
+    </small>
+
+    <button
+      type="button"
+      onClick={()=>
+        setClubSettingsOpen(true)
+      }
+    >
+      表示設定
+    </button>
+
+  </div>
+
+  <div className="choices">
+
+    {CLUBS
+      .filter(club=>
+        visibleClubs.includes(club)
+      )
+      .map(club=>
+
+        <Choice
+          key={club}
+          on={
+            practice.club===club
+          }
+          f={()=>{
+
+            setPractice({
+              ...fresh(),
+              club
+            });
+
+            setSuggestions([]);
+            setExcludedSuggestions([]);
+            setShowAllSuggestions(false);
+            setPracticeView('input');
+          }}
+        >
+          {club}
+        </Choice>
+
+      )}
+
+  </div>
+
+</Field>
 
 {practice.club!=='パター'&&(
   <section className="todayTheme">
@@ -1992,7 +2102,114 @@ return <div className="app"><header><Flag/><button className="appTitle" onClick=
 
     </section>
   </div>
-)}</div>}
+)}
+
+{clubSettingsOpen&&(
+
+  <div className="modal">
+
+    <section className="card clubSettingsCard">
+
+      <div className="clubSettingsHeader">
+
+        <div>
+          <h3>表示するクラブ</h3>
+
+          <small>
+            練習カルテに表示する
+            クラブを選択してください
+          </small>
+        </div>
+
+        <button
+          className="closeButton"
+          onClick={()=>
+            setClubSettingsOpen(false)
+          }
+        >
+          ×
+        </button>
+
+      </div>
+
+      <div className="clubSettingsGrid">
+
+        {CLUBS.map(club=>{
+
+          const on=
+            visibleClubs.includes(club);
+
+          return(
+            <button
+              type="button"
+              key={club}
+              className={on?'on':''}
+              onClick={()=>
+                toggleClubVisibility(club)
+              }
+            >
+              <span>
+                {on?'✓':''}
+              </span>
+
+              <b>{club}</b>
+            </button>
+          );
+
+        })}
+
+      </div>
+
+      <div className="clubSettingsActions">
+
+        <button
+          type="button"
+          onClick={()=>{
+
+            setD(value=>({
+              ...value,
+              visibleClubs:[...CLUBS]
+            }));
+
+          }}
+        >
+          すべてON
+        </button>
+
+        <button
+          type="button"
+          className="sub"
+          onClick={()=>{
+
+            /*
+             * 全OFFにすると練習カルテを
+             * 操作できないため、
+             * 現在のクラブだけ残す
+             */
+            setD(value=>({
+              ...value,
+              visibleClubs:[
+                practice.club
+              ]
+            }));
+
+            toast(
+              '現在選択中のクラブだけ残しました'
+            );
+          }}
+        >
+          現在のクラブだけ
+        </button>
+
+      </div>
+
+    </section>
+
+  </div>
+
+)}
+
+</div>}
 
 const ClubAnalysis=({analysis})=>(
   <div className="clubAnalysis">
