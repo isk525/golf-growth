@@ -838,27 +838,6 @@ const getBestFocusForClub=(club,swing)=>{
       b.count-a.count
     )[0]||null;
 };
-
-const groupedDistances=useMemo(()=>{
-
-  const grouped={};
-
-  d.distances.forEach(row=>{
-
-    if(!grouped[row.club]){
-
-      grouped[row.club]=[];
-    }
-
-    grouped[row.club].push(row);
-
-  });
-
-  return Object.entries(grouped);
-
-},[
-  d.distances
-]);
                
 const recs=useMemo(()=>{
   const target=+remaining;
@@ -1861,71 +1840,85 @@ return <div className="app"><header><Flag/><button className="appTitle" onClick=
 
 </Card>
 
-{groupedDistances.map(
-  ([club,rows])=>
+{groupedDistances.map(<Card>
 
-  <Card key={club}>
+  <div className="distanceTable">
 
-    <h3>{club}</h3>
+    <div className="distanceTableHeader">
 
-    <div className="distanceGroup">
+      <span>クラブ</span>
 
-      {rows
-        .sort((a,b)=>{
+      <span>フル</span>
 
-          const order={
-            'フル':0,
-            '10時':1,
-            '8時':2
-          };
+      <span>10時</span>
 
-          return (
-            order[a.swing]??99
-          )-
-          (
-            order[b.swing]??99
-          );
-
-        })
-        .map(row=>
-
-          <div
-            className="distanceGroupRow"
-            key={
-              row.club+
-              row.swing
-            }
-          >
-
-            <strong>
-              {row.swing}
-            </strong>
-
-            <span>
-              {row.yards}y
-            </span>
-
-            <button
-              onClick={()=>
-                setD(v=>({
-                  ...v,
-                  distances:
-                    v.distances.filter(
-                      r=>r!==row
-                    )
-                }))
-              }
-            >
-              <Trash2/>
-            </button>
-
-          </div>
-
-        )}
+      <span>8時</span>
 
     </div>
 
-  </Card>
+    {CLUBS
+      .filter(x=>x!=='パター')
+      .map(club=>{
+
+        const full=
+          d.distances.find(
+            x=>
+              x.club===club &&
+              x.swing==='フル'
+          );
+
+        const ten=
+          d.distances.find(
+            x=>
+              x.club===club &&
+              x.swing==='10時'
+          );
+
+        const eight=
+          d.distances.find(
+            x=>
+              x.club===club &&
+              x.swing==='8時'
+          );
+
+        return(
+
+          <div
+            className="distanceTableRow"
+            key={club}
+          >
+
+            <strong>
+              {club}
+            </strong>
+
+            <span>
+              {full
+                ?`${full.yards}y`
+                :'－'}
+            </span>
+
+            <span>
+              {ten
+                ?`${ten.yards}y`
+                :'－'}
+            </span>
+
+            <span>
+              {eight
+                ?`${eight.yards}y`
+                :'－'}
+            </span>
+
+          </div>
+
+        );
+
+      })}
+
+  </div>
+
+</Card>
 
 )}
 
