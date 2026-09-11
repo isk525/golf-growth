@@ -820,3 +820,15 @@ aside{
   line-height:1.45;
   font-size:11px;
 }
+
+.todayThemeClub{
+  display:grid;
+  justify-items:end;
+  gap:2px;
+}
+
+.todayThemeClub small{
+  color:#64748b;
+  font-size:9px;
+  font-weight:700;
+}
