@@ -1081,7 +1081,7 @@ return <div className="app"><header><Flag/><button className="appTitle" onClick=
   </span>
 </button>
 {d.round&&<button className="code" onClick={()=>navigator.clipboard.writeText(d.round.id)}>{d.round.id}<Copy/></button>}</header><main>
-{page==='home'&&<div className="stack"><button className="distanceLink" onClick={()=>setPage('distances')}><Ruler/><span><b>クラブ距離表</b><small>フル・10時・8時の飛距離を登録</small></span><ChevronRight/></button><Card><div className="row"><h2>ラウンド設定</h2><button className="sub" onClick={()=>setPage('courses')}>コース管理</button></div><select value={courseId} onChange={e=>{const c=d.courses.find(x=>x.id===e.target.value);setCourseId(c.id);setHoles(c.holes.map(h=>({...h,play:true})))}}>{d.courses.map(c=><option key={c.id} value={c.id}>{c.name}</option>)}</select><div className="holeGrid">{holes.map((h,i)=><div className={h.play?'on':''} key={h.no}><button onClick={()=>setHoles(a=>a.map((x,j)=>j===i?{...x,play:!x.play}:x))}>H{h.no}</button><label>Par<select value={h.par} onChange={e=>setHoles(a=>a.map((x,j)=>j===i?{...x,par:+e.target.value}:x))}>{[3,4,5,6].map(n=><option key={n}>{n}</option>)}</select></label></div>)}</div></Card><Card><label>参加メンバー</label>{[0,1,2].map(i=><div className="member" key={i}><input value={d.players[i]||''} onChange={e=>setD(x=>({...x,players:x.players.map((v,j)=>j===i?e.target.value:v)}))}/><select value="" onChange={e=>e.target.value&&setD(x=>({...x,players:x.players.map((v,j)=>j===i?e.target.value:v)}))}><option value="">履歴</option>{d.members.map(n=><option key={n}>{n}</option>)}</select></div>)}<Primary f={start}>ラウンド開始</Primary></Card><Card><label>参加コードで入る</label><div className="inline"><input value={join} onChange={e=>setJoin(e.target.value.toUpperCase())}/><button className="joinButton" onClick={async()=>{const x=await getDoc(doc(db,'rounds',join));if(!x.exists())return toast('見つかりません');setD(v=>({...v,round:x.data()}));setPage('round')}}>参加</button></div></Card>
+{page==='home'&&<div className="stack"><button className="distanceLink" onClick={()=>setPage('distances')}><Ruler/><span><b>クラブ飛距離表</b><small>フル・10時・8時の飛距離を登録</small></span><ChevronRight/></button><Card><div className="row"><h2>ラウンド設定</h2><button className="sub" onClick={()=>setPage('courses')}>コース管理</button></div><select value={courseId} onChange={e=>{const c=d.courses.find(x=>x.id===e.target.value);setCourseId(c.id);setHoles(c.holes.map(h=>({...h,play:true})))}}>{d.courses.map(c=><option key={c.id} value={c.id}>{c.name}</option>)}</select><div className="holeGrid">{holes.map((h,i)=><div className={h.play?'on':''} key={h.no}><button onClick={()=>setHoles(a=>a.map((x,j)=>j===i?{...x,play:!x.play}:x))}>H{h.no}</button><label>Par<select value={h.par} onChange={e=>setHoles(a=>a.map((x,j)=>j===i?{...x,par:+e.target.value}:x))}>{[3,4,5,6].map(n=><option key={n}>{n}</option>)}</select></label></div>)}</div></Card><Card><label>参加メンバー</label>{[0,1,2].map(i=><div className="member" key={i}><input value={d.players[i]||''} onChange={e=>setD(x=>({...x,players:x.players.map((v,j)=>j===i?e.target.value:v)}))}/><select value="" onChange={e=>e.target.value&&setD(x=>({...x,players:x.players.map((v,j)=>j===i?e.target.value:v)}))}><option value="">履歴</option>{d.members.map(n=><option key={n}>{n}</option>)}</select></div>)}<Primary f={start}>ラウンド開始</Primary></Card><Card><label>参加コードで入る</label><div className="inline"><input value={join} onChange={e=>setJoin(e.target.value.toUpperCase())}/><button className="joinButton" onClick={async()=>{const x=await getDoc(doc(db,'rounds',join));if(!x.exists())return toast('見つかりません');setD(v=>({...v,round:x.data()}));setPage('round')}}>参加</button></div></Card>
 <Card>
 
 <div className="dataManager">
@@ -1288,7 +1288,7 @@ return <div className="app"><header><Flag/><button className="appTitle" onClick=
 
 {practice.club==='パター'?<><section className="puttMeasureCard">
 <div className="row"><b>目標までの距離</b>
-<button className="miniSave" onClick={()=>{setD(x=>({...x,putterSettings:{putterLength:+putterLength||0.85,stepLength:+stepLength||0.7}}));toast('測定基準を保存しました')}}>基準保存</button></div>
+<button className="miniSave" onClick={()=>{setD(x=>({...x,putterSettings:{putterLength:+putterLength||0.85,stepLength:+stepLength||0.7}}));toast('基準保存しました')}}>基準保存</button></div>
 <div className="measureTabs">{[['meter','ｍ'],['putter','本数'],['step','歩数']].map(([k,l])=><Choice key={k} on={practice.puttMeasure===k} f={()=>setPractice({...practice,puttMeasure:k})}>{l}</Choice>)}</div>{practice.puttMeasure==='meter'&&<label className="measureInput"><input inputMode="decimal" value={practice.puttMeters} onChange={e=>setPractice({...practice,puttMeters:e.target.value})}/><b>m</b></label>}{practice.puttMeasure==='putter'&&<><div className="measureRow"><label>何本分<input inputMode="decimal" value={practice.putterCount} onChange={e=>setPractice({...practice,putterCount:e.target.value})}/></label><label>1本<input inputMode="decimal" value={putterLength} onChange={e=>setPutterLength(e.target.value)}/><small>m</small></label></div><strong className="estimatedDistance">推定 {estimatedPuttMeters()}m</strong></>}{practice.puttMeasure==='step'&&<><div className="measureRow"><label>歩数<input inputMode="decimal" value={practice.stepCount} onChange={e=>setPractice({...practice,stepCount:e.target.value})}/></label><label>1歩<input inputMode="decimal" value={stepLength} onChange={e=>setStepLength(e.target.value)}/><small>m</small></label></div><strong className="estimatedDistance">推定 {estimatedPuttMeters()}m</strong></>}</section><Field n="振り幅の基準"><div className="strokeChoices">{['右足内側','右足外側','足幅と同じ','足幅の1.5倍','自由'].map(v=><Choice key={v} on={practice.puttStroke===v} f={()=>setPractice({...practice,puttStroke:v})}>{v}</Choice>)}</div>{puttReference&&<small className="puttReference">近い距離の成功例：{puttReference.puttMeters}m → {puttReference.puttStroke}</small>}</Field><Field n="傾斜"><div className="choices">{['上り','平坦','下り','スライスライン','フックライン'].map(v=><Choice key={v} on={practice.puttSlope===v} f={()=>setPractice({...practice,puttSlope:v})}>{v}</Choice>)}</div></Field><Field n="課題"><div className="choices">{['距離感','方向'].map(v=><Choice key={v} on={practice.puttIssue===v} f={()=>setPractice({...practice,puttIssue:v})}>{v}</Choice>)}</div></Field>{practice.puttIssue==='距離感'?<><Field n="転がった結果"><div className="choices">{['ショート','ちょうど','オーバー'].map(v=><Choice key={v} on={practice.puttDistanceResult===v} f={()=>setPractice({...practice,puttDistanceResult:v})}>{v}</Choice>)}</div></Field><Field n="誤差の目安"><label className="measureInput compact"><input inputMode="numeric" value={practice.puttErrorCm} onChange={e=>setPractice({...practice,puttErrorCm:e.target.value})}/><b>cm</b></label></Field></>:<Field n="打ち出し方向"><div className="choices">{['左','中央','右'].map(v=><Choice key={v} on={practice.puttDirection===v} f={()=>setPractice({...practice,puttDirection:v})}>{v}</Choice>)}</div></Field>}</>:<><Field n="最終的に飛んだ方向"><small className="fieldHelp">ボールが最終的にどちらへ行ったか</small><div className="choices">{DIR.map(v=><Choice key={v} on={practice.direction===v} f={()=>setPractice({...practice,direction:v})}>{v}</Choice>)}</div></Field><Field n="高さ"><div className="choices">{HEIGHT.map(v=><Choice key={v} on={practice.height===v} f={()=>setPractice({...practice,height:v})}>{v}</Choice>)}</div></Field>
 <Field n="振り幅">
 <div className="choices">{SWINGS.map(v=><Choice key={v} on={practice.swing===v} f={()=>setPractice({...practice,swing:v})}>{v}</Choice>)}</div>
@@ -1853,184 +1853,216 @@ return <div className="app"><header><Flag/><button className="appTitle" onClick=
   </div>
 )}
 
-{page==='distances'&&<div className="stack">
+{page==='distances'&&(
+  <div className="stack">
 
-<Back f={()=>setPage('home')}/>
+    <Back f={()=>setPage('home')}/>
 
-<h2>クラブ距離表</h2>
+    <h2>クラブ飛距離表</h2>
 
-<Card>
+    <Card>
 
-  <div className="distanceForm">
+      <div className="distanceForm">
 
-    <select
-      value={distance.club}
-      onChange={e=>
+        <select
+          value={distance.club}
+          onChange={e=>
+            setDistance({
+              ...distance,
+              club:e.target.value
+            })
+          }
+        >
+          {CLUBS
+            .filter(x=>x!=='パター')
+            .map(x=>
+              <option key={x}>
+                {x}
+              </option>
+            )
+          }
+        </select>
+
+        <select
+          value={distance.swing}
+          onChange={e=>
+            setDistance({
+              ...distance,
+              swing:e.target.value
+            })
+          }
+        >
+          {SWINGS.map(x=>
+            <option key={x}>
+              {x}
+            </option>
+          )}
+        </select>
+
+        <label>
+
+          <input
+            inputMode="numeric"
+            value={distance.yards}
+            placeholder="70"
+            onChange={e=>
+              setDistance({
+                ...distance,
+                yards:e.target.value
+              })
+            }
+          />
+
+          <b>y</b>
+
+        </label>
+
+      </div>
+
+      <Primary f={()=>{
+        if(!distance.yards)return;
+
+        const r={
+          ...distance,
+          yards:+distance.yards
+        };
+
+        setD(x=>({
+          ...x,
+          distances:[
+            ...x.distances.filter(
+              v=>!(
+                v.club===r.club &&
+                v.swing===r.swing
+              )
+            ),
+            r
+          ]
+        }));
+
         setDistance({
           ...distance,
-          club:e.target.value
-        })
-      }
-    >
-      {CLUBS
-        .filter(x=>x!=='パター')
-        .map(x=>
-          <option key={x}>
-            {x}
-          </option>
-        )
-      }
-    </select>
+          yards:''
+        });
 
-    <select
-      value={distance.swing}
-      onChange={e=>
-        setDistance({
-          ...distance,
-          swing:e.target.value
-        })
-      }
-    >
-      {SWINGS.map(x=>
-        <option key={x}>
-          {x}
-        </option>
-      )}
-    </select>
+        toast('飛距離を保存しました');
+      }}>
+        登録・更新
+      </Primary>
 
-    <label>
+    </Card>
 
-      <input
-        inputMode="numeric"
-        value={distance.yards}
-        placeholder="70"
-        onChange={e=>
-          setDistance({
-            ...distance,
-            yards:e.target.value
-          })
-        }
-      />
+    <Card>
 
-      <b>y</b>
+      <div className="distanceTable">
 
-    </label>
+        <div className="distanceTableHeader">
 
-  </div>
+          <span>クラブ</span>
 
-  <Primary f={()=>{
-    if(!distance.yards)return;
+          <span>フル</span>
 
-    const r={
-      ...distance,
-      yards:+distance.yards
-    };
+          <span>10時</span>
 
-    setD(x=>({
-      ...x,
-      distances:[
-        ...x.distances.filter(
-          v=>!(
-            v.club===r.club &&
-            v.swing===r.swing
-          )
-        ),
-        r
-      ]
-    }));
+          <span>8時</span>
 
-    setDistance({
-      ...distance,
-      yards:''
-    });
+        </div>
 
-  }}>
-    登録
-  </Primary>
+        {CLUBS
+          .filter(x=>x!=='パター')
+          .map(club=>{
 
-</Card>
+            const full=
+              d.distances.find(
+                x=>
+                  x.club===club &&
+                  x.swing==='フル'
+              );
 
-<Card>
+            const ten=
+              d.distances.find(
+                x=>
+                  x.club===club &&
+                  x.swing==='10時'
+              );
 
-  <div className="distanceTable">
+            const eight=
+              d.distances.find(
+                x=>
+                  x.club===club &&
+                  x.swing==='8時'
+              );
 
-    <div className="distanceTableHeader">
+            const deleteDistance=(clubName,swingName)=>{
+              setD(x=>({
+                ...x,
+                distances:x.distances.filter(
+                  v=>!(v.club===clubName && v.swing===swingName)
+                )
+              }));
+              toast('削除しました');
+            };
 
-      <span>クラブ</span>
+            const selectForEdit=(item)=>{
+              setDistance({
+                club:item.club,
+                swing:item.swing,
+                yards:String(item.yards)
+              });
+            };
 
-      <span>フル</span>
+            return(
 
-      <span>10時</span>
+              <div
+                className="distanceTableRow"
+                key={club}
+              >
 
-      <span>8時</span>
+                <strong>
+                  {club}
+                </strong>
 
-    </div>
+                {[
+                  {swing:'フル',data:full},
+                  {swing:'10時',data:ten},
+                  {swing:'8時',data:eight}
+                ].map(({swing,data})=>(
+                  <span key={swing} className="distanceCell">
+                    {data ? (
+                      <div className="distanceItem">
+                        <button
+                          className="distanceValueBtn"
+                          onClick={()=>selectForEdit(data)}
+                          title="タップして編集"
+                        >
+                          {data.yards}y
+                        </button>
+                        <button
+                          className="icon danger mini"
+                          onClick={()=>deleteDistance(club,swing)}
+                          title="削除"
+                        >
+                          <Trash2/>
+                        </button>
+                      </div>
+                    ) : (
+                      '－'
+                    )}
+                  </span>
+                ))}
 
-    {CLUBS
-      .filter(x=>x!=='パター')
-      .map(club=>{
+              </div>
 
-        const full=
-          d.distances.find(
-            x=>
-              x.club===club &&
-              x.swing==='フル'
-          );
+            );
 
-        const ten=
-          d.distances.find(
-            x=>
-              x.club===club &&
-              x.swing==='10時'
-          );
+          })}
 
-        const eight=
-          d.distances.find(
-            x=>
-              x.club===club &&
-              x.swing==='8時'
-          );
+      </div>
 
-        return(
-
-          <div
-            className="distanceTableRow"
-            key={club}
-          >
-
-            <strong>
-              {club}
-            </strong>
-
-            <span>
-              {full
-                ?`${full.yards}y`
-                :'－'}
-            </span>
-
-            <span>
-              {ten
-                ?`${ten.yards}y`
-                :'－'}
-            </span>
-
-            <span>
-              {eight
-                ?`${eight.yards}y`
-                :'－'}
-            </span>
-
-          </div>
-
-        );
-
-      })}
+    </Card>
 
   </div>
-
-</Card>
-
-</div>}
+)}
 
 {page==='round'&&d.round&&<div className="stack"><Card><div className="row"><span><small>{fmt(d.round.createdAt)}</small><b>{d.round.course}</b></span><button className="code" onClick={()=>navigator.clipboard.writeText(d.round.id)}>{d.round.id}<Copy/></button></div></Card>
 <section className="clubAssist">
