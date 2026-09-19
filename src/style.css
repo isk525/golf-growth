@@ -1056,3 +1056,47 @@ aside{
   }
 
 }
+
+/* クラブ飛距離表の編集・削除ボタン用スタイリング */
+.distanceCell {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.distanceItem {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  background: #f0fdf4;
+  border: 1px solid #a7f3d0;
+  border-radius: 8px;
+  padding: 2px 4px;
+}
+
+.distanceValueBtn {
+  border: 0;
+  background: transparent;
+  color: #047857;
+  font-weight: 800;
+  font-size: 11px;
+  padding: 2px 4px;
+  cursor: pointer;
+}
+
+.distanceValueBtn:active {
+  opacity: 0.6;
+}
+
+.icon.mini {
+  padding: 2px;
+  border-radius: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.icon.mini svg {
+  width: 12px;
+  height: 12px;
+}
